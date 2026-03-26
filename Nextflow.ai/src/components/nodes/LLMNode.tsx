@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Handle, Position, NodeProps } from "reactflow";
+import { Handle } from "reactflow";
 import BaseNode from "./BaseNode";
 import { useWorkflowStore, BaseNodeData } from "@/store/workflowStore";
 import { Maximize2, Minimize2, Copy, Check } from "lucide-react";
@@ -20,7 +20,7 @@ const HANDLE_LABELS = [
   { id: "images",        label: "Images", color: "!bg-emerald-500" },
 ];
 
-export default function LLMNode({ id, data, selected }: NodeProps<BaseNodeData>) {
+export default function LLMNode({ id, data, selected }: { id: string; data: BaseNodeData; selected?: boolean }) {
   const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
   const edges = useWorkflowStore((s) => s.edges);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -45,7 +45,7 @@ export default function LLMNode({ id, data, selected }: NodeProps<BaseNodeData>)
           <div key={h.id} className="relative flex items-center">
             <Handle
               type="target"
-              position={Position.Left}
+              position="left"
               id={h.id}
               className={`!w-3 !h-3 ${h.color} !border-2 !border-zinc-900 !relative !transform-none`}
             />
@@ -116,16 +116,19 @@ export default function LLMNode({ id, data, selected }: NodeProps<BaseNodeData>)
               </div>
             </div>
             
-            <div className="w-full flex-grow bg-zinc-950/60 border border-emerald-800/40 rounded-lg p-2 text-[13px] text-zinc-300 overflow-y-auto shadow-inner markdown-override custom-scrollbar-premium">
+            <div className="w-full flex-grow bg-zinc-950/60 border border-emerald-800/40 rounded-lg p-2 text-[13px] text-zinc-300 overflow-y-auto shadow-inner custom-scrollbar-premium">
               <ReactMarkdown
                 components={{
                   h1: ({node, ...props}) => <h1 className="text-lg font-bold text-zinc-100 my-2" {...props} />,
                   h2: ({node, ...props}) => <h2 className="text-md font-bold text-zinc-100 my-2" {...props} />,
                   h3: ({node, ...props}) => <h3 className="text-sm font-bold text-zinc-200 my-1" {...props} />,
                   p: ({node, ...props}) => <p className="my-1.5 leading-relaxed" {...props} />,
+                  strong: ({node, ...props}) => <strong className="font-bold text-emerald-400" {...props} />,
+                  em: ({node, ...props}) => <em className="italic text-zinc-200" {...props} />,
                   ul: ({node, ...props}) => <ul className="list-disc pl-5 my-1.5" {...props} />,
                   ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-1.5" {...props} />,
                   li: ({node, ...props}) => <li className="my-0.5" {...props} />,
+                  blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-emerald-500/50 pl-3 my-2 text-zinc-400 italic" {...props} />,
                   code: ({node, inlineClassName, className, children, ...props}: any) => {
                     const match = /language-(\w+)/.exec(className || '');
                     return !inlineClassName && match ? (
@@ -180,6 +183,8 @@ export default function LLMNode({ id, data, selected }: NodeProps<BaseNodeData>)
                           h2: ({node, ...props}) => <h2 className="text-2xl font-bold text-white mb-4 mt-6" {...props} />,
                           h3: ({node, ...props}) => <h3 className="text-xl font-bold text-zinc-200 mb-3 mt-5" {...props} />,
                           p: ({node, ...props}) => <p className="mb-4 leading-relaxed" {...props} />,
+                          strong: ({node, ...props}) => <strong className="font-bold text-emerald-400" {...props} />,
+                          em: ({node, ...props}) => <em className="italic text-zinc-200" {...props} />,
                           ul: ({node, ...props}) => <ul className="list-disc pl-8 mb-4 space-y-2" {...props} />,
                           ol: ({node, ...props}) => <ol className="list-decimal pl-8 mb-4 space-y-2" {...props} />,
                           li: ({node, ...props}) => <li className="pl-1" {...props} />,
@@ -207,7 +212,7 @@ export default function LLMNode({ id, data, selected }: NodeProps<BaseNodeData>)
         )}
       </div>
 
-      <Handle type="source" position={Position.Right} id="output"
+      <Handle type="source" position="right" id="output"
         className="!w-3 !h-3 !bg-indigo-500 !border-2 !border-zinc-900" />
     </BaseNode>
   );

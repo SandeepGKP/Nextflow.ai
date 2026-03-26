@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Handle, Position, NodeProps } from "reactflow";
+import { Handle } from "reactflow";
 import BaseNode from "./BaseNode";
 import { useWorkflowStore, BaseNodeData } from "@/store/workflowStore";
 import { Maximize2, Minimize2 } from "lucide-react";
 
-export default function CropImageNode({ id, data, selected }: NodeProps<BaseNodeData>) {
+export default function CropImageNode({ id, data, selected }: { id: string; data: BaseNodeData; selected?: boolean }) {
   const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -19,13 +19,13 @@ export default function CropImageNode({ id, data, selected }: NodeProps<BaseNode
     <BaseNode id={id} nodeType="cropImage" data={data} selected={selected}>
       <div className="absolute left-0 top-10 flex flex-col" style={{ gap: 20, transform: "translateX(-8px)" }}>
         <div className="relative flex items-center">
-          <Handle type="target" position={Position.Left} id="image"
+          <Handle type="target" position="left" id="image"
             className="!w-3 !h-3 !bg-zinc-600 !border-2 !border-zinc-900 !relative !transform-none" />
           <span className="ml-2 text-[9px] text-zinc-500 leading-none">Image</span>
         </div>
         {(["x","y","width","height"] as const).map((h) => (
           <div key={h} className="relative flex items-center">
-            <Handle type="target" position={Position.Left} id={h}
+            <Handle type="target" position="left" id={h}
               className="!w-3 !h-3 !bg-zinc-700 !border-2 !border-zinc-900 !relative !transform-none" />
             <span className="ml-2 text-[9px] text-zinc-500 leading-none capitalize">{h}</span>
           </div>
@@ -84,7 +84,7 @@ export default function CropImageNode({ id, data, selected }: NodeProps<BaseNode
         </div>
       </div>
 
-      <Handle type="source" position={Position.Right} id="output"
+      <Handle type="source" position="right" id="output"
         className="!w-3 !h-3 !bg-indigo-500 !border-2 !border-zinc-900" />
     </BaseNode>
   );

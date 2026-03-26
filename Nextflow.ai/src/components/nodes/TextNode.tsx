@@ -1,16 +1,16 @@
 "use client";
 
 import React from "react";
-import { Handle, Position, NodeProps } from "reactflow";
+import { Handle } from "reactflow";
 import BaseNode from "./BaseNode";
 import { useWorkflowStore, BaseNodeData } from "@/store/workflowStore";
 
-export default function TextNode({ id, data, selected }: NodeProps<BaseNodeData>) {
+export default function TextNode({ id, data, selected }: { id: string; data: BaseNodeData; selected?: boolean }) {
   const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
 
   return (
     <BaseNode id={id} nodeType="text" data={data} selected={selected}>
-      <Handle type="target" position={Position.Left} id="input"
+      <Handle type="target" position="left" id="input"
         className="!w-3 !h-3 !bg-zinc-600 !border-2 !border-zinc-900" />
 
       <div className="flex flex-col gap-1 h-full">
@@ -23,7 +23,7 @@ export default function TextNode({ id, data, selected }: NodeProps<BaseNodeData>
         />
       </div>
 
-      <Handle type="source" position={Position.Right} id="output"
+      <Handle type="source" position="right" id="output"
         className="!w-3 !h-3 !bg-indigo-500 !border-2 !border-zinc-900" />
     </BaseNode>
   );

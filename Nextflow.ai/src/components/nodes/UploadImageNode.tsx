@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Handle, Position, NodeProps } from "reactflow";
+import { Handle } from "reactflow";
 import BaseNode from "./BaseNode";
 import { useWorkflowStore, BaseNodeData } from "@/store/workflowStore";
 import { UploadCloud, X, Maximize2, Minimize2 } from "lucide-react";
 import { uploadViaTransloadit } from "@/lib/transloadit";
 
-export default function UploadImageNode({ id, data, selected }: NodeProps<BaseNodeData>) {
+export default function UploadImageNode({ id, data, selected }: { id: string; data: BaseNodeData; selected?: boolean }) {
   const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -101,7 +101,7 @@ export default function UploadImageNode({ id, data, selected }: NodeProps<BaseNo
         </div>
       )}
       {isUploading && <p className="text-[11px] text-blue-400 animate-pulse text-center">Uploading…</p>}
-      <Handle type="source" position={Position.Right} id="output"
+      <Handle type="source" position="right" id="output"
         className="!w-3 !h-3 !bg-emerald-500 !border-2 !border-zinc-900" />
     </BaseNode>
   );

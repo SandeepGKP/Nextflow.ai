@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useWorkflowStore, WorkflowState, WorkflowRun, NodeRunEntry } from "@/store/workflowStore";
 import { CheckCircle, XCircle, Clock, ChevronDown, ChevronRight, Trash2, Eraser } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
 
 const statusColor: Record<string, string> = {
   success: "text-emerald-400",
@@ -103,7 +104,34 @@ export default function HistoryPanel() {
                                 {nr.status === "error" ? (
                                   <span className="text-red-400/80 italic text-[10px]">Error: Task failed or timed out</span>
                                 ) : nr.outputs?.output ? (
-                                  <span className="text-zinc-400 line-clamp-3 leading-tight">{nr.outputs.output}</span>
+                                  <div className="text-zinc-400 line-clamp-6 leading-tight max-w-none pb-1 font-sans">
+                                    <ReactMarkdown
+                                      components={{
+                                        h1: ({node, ...props}) => <h1 className="text-sm font-bold text-white my-1" {...props} />,
+                                        h2: ({node, ...props}) => <h2 className="text-xs font-bold text-white my-1" {...props} />,
+                                        h3: ({node, ...props}) => <h3 className="text-xs font-bold text-zinc-200 my-0.5" {...props} />,
+                                        p: ({node, ...props}) => <p className="my-1" {...props} />,
+                                        strong: ({node, ...props}) => <strong className="font-bold text-emerald-400" {...props} />,
+                                        em: ({node, ...props}) => <em className="italic text-zinc-200" {...props} />,
+                                        ul: ({node, ...props}) => <ul className="list-disc pl-4 my-1" {...props} />,
+                                        ol: ({node, ...props}) => <ol className="list-decimal pl-4 my-1" {...props} />,
+                                        li: ({node, ...props}) => <li className="my-0.5" {...props} />,
+                                        blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-emerald-500/50 pl-2 my-1 text-zinc-500 italic" {...props} />,
+                                        code: ({node, inlineClassName, className, children, ...props}: any) => {
+                                          const match = /language-(\w+)/.exec(className || '');
+                                          return !inlineClassName && match ? (
+                                            <pre className="bg-zinc-900 border border-zinc-700 rounded p-1 my-1 overflow-x-auto text-[10px] text-emerald-400">
+                                              <code className={className} {...props}>{children}</code>
+                                            </pre>
+                                          ) : (
+                                            <code className="bg-zinc-800 text-emerald-400 px-1 rounded text-[10px]" {...props}>{children}</code>
+                                          );
+                                        }
+                                      }}
+                                    >
+                                      {nr.outputs.output}
+                                    </ReactMarkdown>
+                                  </div>
                                 ) : (
                                   <span className="text-zinc-600 italic">No output captured</span>
                                 )}
