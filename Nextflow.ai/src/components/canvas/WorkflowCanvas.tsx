@@ -144,7 +144,7 @@ function CanvasInner() {
     if (!sourceNode || !targetNode) return false;
 
     const checkCycle = (node: any, targetId: string): boolean => {
-      const outgoers = getOutgoers(node, nodes, edges);
+      const outgoers = getOutgoers(node as any, nodes as any, edges as any);
       for (const outgoer of outgoers) {
         if (outgoer.id === targetId) return true;
         if (checkCycle(outgoer, targetId)) return true;

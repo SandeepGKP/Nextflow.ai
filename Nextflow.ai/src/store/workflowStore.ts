@@ -17,23 +17,23 @@ export type Edge = {
   sourceHandle?: string | null;
   targetHandle?: string | null;
   animated?: boolean;
-  style?: Record<string, unknown>;
-  markerEnd?: unknown;
-  [key: string]: unknown;
+  style?: any;
+  markerEnd?: any;
+  [key: string]: any;
 };
 
-export type EdgeChange = { id: string; type: string; [key: string]: unknown };
+export type EdgeChange = { id: string; type: string; [key: string]: any };
 
-export type Node<T = Record<string, unknown>> = {
+export type Node<T = any> = {
   id: string;
   type?: string;
   position: RFPosition;
   data: T;
   selected?: boolean;
-  [key: string]: unknown;
+  [key: string]: any;
 };
 
-export type NodeChange = { id: string; type: string; [key: string]: unknown };
+export type NodeChange = { id: string; type: string; [key: string]: any };
 
 export type OnNodesChange = (changes: NodeChange[]) => void;
 export type OnEdgesChange = (changes: EdgeChange[]) => void;
