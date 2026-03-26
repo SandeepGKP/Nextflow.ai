@@ -2,6 +2,13 @@
 
 import React from "react";
 import { Handle } from "reactflow";
+
+enum Position {
+  Left = "left",
+  Right = "right",
+  Top = "top",
+  Bottom = "bottom",
+}
 import BaseNode from "./BaseNode";
 import { useWorkflowStore, BaseNodeData } from "@/store/workflowStore";
 
@@ -15,12 +22,12 @@ export default function ExtractFrameNode({ id, data, selected }: { id: string; d
     <BaseNode id={id} nodeType="extractFrame" data={data} selected={selected}>
       <div className="absolute left-0 top-10 flex flex-col" style={{ gap: 20, transform: "translateX(-8px)" }}>
         <div className="relative flex items-center">
-          <Handle type="target" position="left" id="video"
+          <Handle type="target" position={Position.Left} id="video"
             className="!w-3 !h-3 !bg-zinc-600 !border-2 !border-zinc-900 !relative !transform-none" />
           <span className="ml-2 text-[9px] text-zinc-500 leading-none">Video</span>
         </div>
         <div className="relative flex items-center">
-          <Handle type="target" position="left" id="timestamp"
+          <Handle type="target" position={Position.Left} id="timestamp"
             className="!w-3 !h-3 !bg-zinc-700 !border-2 !border-zinc-900 !relative !transform-none" />
           <span className="ml-2 text-[9px] text-zinc-500 leading-none">Time</span>
         </div>
@@ -49,7 +56,7 @@ export default function ExtractFrameNode({ id, data, selected }: { id: string; d
         </div>
       </div>
 
-      <Handle type="source" position="right" id="output"
+      <Handle type="source" position={Position.Right} id="output"
         className="!w-3 !h-3 !bg-indigo-500 !border-2 !border-zinc-900" />
     </BaseNode>
   );

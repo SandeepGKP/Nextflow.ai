@@ -2,6 +2,13 @@
 
 import React, { useState } from "react";
 import { Handle } from "reactflow";
+
+enum Position {
+  Left = "left",
+  Right = "right",
+  Top = "top",
+  Bottom = "bottom",
+}
 import BaseNode from "./BaseNode";
 import { useWorkflowStore, BaseNodeData } from "@/store/workflowStore";
 import { Maximize2, Minimize2, Copy, Check } from "lucide-react";
@@ -45,7 +52,7 @@ export default function LLMNode({ id, data, selected }: { id: string; data: Base
           <div key={h.id} className="relative flex items-center">
             <Handle
               type="target"
-              position="left"
+              position={Position.Left}
               id={h.id}
               className={`!w-3 !h-3 ${h.color} !border-2 !border-zinc-900 !relative !transform-none`}
             />
@@ -212,7 +219,7 @@ export default function LLMNode({ id, data, selected }: { id: string; data: Base
         )}
       </div>
 
-      <Handle type="source" position="right" id="output"
+      <Handle type="source" position={Position.Right} id="output"
         className="!w-3 !h-3 !bg-indigo-500 !border-2 !border-zinc-900" />
     </BaseNode>
   );
