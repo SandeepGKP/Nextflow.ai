@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String       @id @default(cuid())
+  clerkId   String       @unique
+  email     String       @unique
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  workflows Workflow[]
+  runs      WorkflowRun[]
+}
+
+model Workflow {
+  id        String       @id @default(cuid())
+  name      String
+  json      Json                  // { nodes: [...], edges: [...] }
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  runs      WorkflowRun[]
+}
+
+model WorkflowRun {
+  id          String    @id @default(cuid())
+  workflowId  String?
+  workflow    Workflow? @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      String    // "running" | "success" | "error"
+  scope       String    @default("full")  // "full" | "single" | "selected"
+  duration    Float?    // milliseconds
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  nodeRuns    NodeRun[]
+}
+
+model NodeRun {
+  id            String      @id @default(cuid())
+  workflowRunId String
+  workflowRun   WorkflowRun @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+  nodeId        String
+  nodeType      String
+  status        String      // "running" | "success" | "error"
+  inputs        Json
+  outputs       Json?
+  startedAt     DateTime    @default(now())
+  finishedAt    DateTime?
+  duration      Float?
+}
