@@ -22,7 +22,7 @@ export type Edge = {
   [key: string]: any;
 };
 
-export type EdgeChange = { id: string; type: string; [key: string]: any };
+
 
 export type Node<T = any> = {
   id: string;
@@ -33,10 +33,11 @@ export type Node<T = any> = {
   [key: string]: any;
 };
 
-export type NodeChange = { id: string; type: string; [key: string]: any };
+export type NodeChange = any;
+export type EdgeChange = any;
 
-export type OnNodesChange = (changes: NodeChange[]) => void;
-export type OnEdgesChange = (changes: EdgeChange[]) => void;
+export type OnNodesChange = (changes: any[]) => void;
+export type OnEdgesChange = (changes: any[]) => void;
 export type OnConnect   = (connection: Connection) => void;
 
 // Runtime helpers from reactflow (exist at JS level even when .d.ts is broken)
