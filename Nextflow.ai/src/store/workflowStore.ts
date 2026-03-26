@@ -1,18 +1,57 @@
 import { create } from "zustand";
-import {
-  Connection,
-  Edge,
-  EdgeChange,
-  Node,
-  NodeChange,
-  addEdge,
-  OnNodesChange,
-  OnEdgesChange,
-  OnConnect,
-  applyNodeChanges,
-  applyEdgeChanges,
-  MarkerType,
-} from "reactflow";
+
+// ─── Local type shims (reactflow's .d.ts is broken under this TS config) ──────
+export type RFPosition = { x: number; y: number };
+
+export type Connection = {
+  source: string | null;
+  target: string | null;
+  sourceHandle: string | null;
+  targetHandle: string | null;
+};
+
+export type Edge = {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
+  animated?: boolean;
+  style?: Record<string, unknown>;
+  markerEnd?: unknown;
+  [key: string]: unknown;
+};
+
+export type EdgeChange = { id: string; type: string; [key: string]: unknown };
+
+export type Node<T = Record<string, unknown>> = {
+  id: string;
+  type?: string;
+  position: RFPosition;
+  data: T;
+  selected?: boolean;
+  [key: string]: unknown;
+};
+
+export type NodeChange = { id: string; type: string; [key: string]: unknown };
+
+export type OnNodesChange = (changes: NodeChange[]) => void;
+export type OnEdgesChange = (changes: EdgeChange[]) => void;
+export type OnConnect   = (connection: Connection) => void;
+
+// Runtime helpers from reactflow (exist at JS level even when .d.ts is broken)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const rf = require("reactflow") as {
+  addEdge: (edge: (Omit<Partial<Edge>, "source" | "target"> & Connection) & Record<string, unknown>, edges: Edge[]) => Edge[];
+  applyNodeChanges: (changes: NodeChange[], nodes: Node<any>[]) => Node<any>[];
+  applyEdgeChanges: (changes: EdgeChange[], edges: Edge[]) => Edge[];
+  MarkerType: { ArrowClosed: string };
+};
+
+const addEdge          = rf.addEdge;
+const applyNodeChanges = rf.applyNodeChanges;
+const applyEdgeChanges = rf.applyEdgeChanges;
+const MarkerType       = rf.MarkerType;
 
 export type NodeStatus = "idle" | "running" | "success" | "error";
 

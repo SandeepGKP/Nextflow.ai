@@ -12,5 +12,5 @@ export const config: TriggerConfig = {
       factor: 2,
     },
   },
-  dirs: ["src/trigger"],
+  // dirs field removed — not supported in this SDK version
 };

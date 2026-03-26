@@ -8,12 +8,19 @@ import ReactFlow, {
   ReactFlowProvider,
   Panel,
   useReactFlow,
-  Connection,
-  NodeMouseHandler,
   getOutgoers,
 } from "reactflow";
+
+// Local types to bypass broken library exports
+interface Connection {
+  source: string | null;
+  target: string | null;
+  sourceHandle: string | null;
+  targetHandle: string | null;
+}
+type NodeMouseHandler = (event: React.MouseEvent, node: any) => void;
 import "reactflow/dist/style.css";
-import { useWorkflowStore } from "@/store/workflowStore";
+import { useWorkflowStore, AppNode } from "@/store/workflowStore";
 import TextNode from "@/components/nodes/TextNode";
 import UploadImageNode from "@/components/nodes/UploadImageNode";
 import UploadVideoNode from "@/components/nodes/UploadVideoNode";
@@ -245,7 +252,7 @@ function CanvasInner() {
         <Background color="#3f3f46" gap={24} size={1} />
         <Controls className="!bottom-4 !left-4" />
         <MiniMap
-          nodeColor={(n) => ({
+          nodeColor={(n: AppNode) => ({
             running: "#3b82f6", success: "#22c55e", error: "#ef4444",
           }[n.data?.status as string] || "#52525b")}
           maskColor="rgba(0,0,0,0.7)"
