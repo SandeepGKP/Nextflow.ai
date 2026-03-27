@@ -12,5 +12,6 @@ export const config: TriggerConfig = {
       factor: 2,
     },
   },
-  // dirs field removed — not supported in this SDK version
+  maxDuration: 3600,
+  dirs: ["./src/trigger"],
 };

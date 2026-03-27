@@ -24,11 +24,11 @@ export async function POST(req: NextRequest) {
   try {
     const nodeStartedAt = new Date();
 
-    const result = await tasks.triggerAndPoll("execute-extract-frame", {
+    const result = await tasks.triggerAndWait("execute-extract-frame", {
       videoUrl, timestamp, nodeId
     });
 
-    if (result.status === "COMPLETED") {
+    if (result.ok) {
       const frameUrl = (result.output as any).frameUrl;
 
       if (workflowRunId) {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ frameUrl });
     } else {
-      throw new Error(`Extract frame task failed: ${result.status}`);
+      throw new Error(`Extract frame task failed: ${result.error}`);
     }
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

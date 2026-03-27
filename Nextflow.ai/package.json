@@ -7,15 +7,15 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "dev:trigger": "npx trigger.dev@beta dev",
-    "deploy:trigger": "npx trigger.dev@beta deploy"
+    "dev:trigger": "npx trigger.dev@latest dev",
+    "deploy:trigger": "npx trigger.dev@latest deploy"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.0.6",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
     "@reactflow/node-resizer": "^2.2.14",
-    "@trigger.dev/sdk": "3.0.0-beta.56",
+    "@trigger.dev/sdk": "4.4.3",
     "fluent-ffmpeg": "^2.1.3",
     "groq-sdk": "^1.1.2",
     "lucide-react": "^1.6.0",

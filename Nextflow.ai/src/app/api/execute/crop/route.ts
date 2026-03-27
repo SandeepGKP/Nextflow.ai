@@ -28,11 +28,11 @@ export async function POST(req: NextRequest) {
     const nodeStartedAt = new Date();
     
     // Trigger task
-    const result = await tasks.triggerAndPoll("execute-crop-image", {
+    const result = await tasks.triggerAndWait("execute-crop-image", {
       imageUrl, x, y, width, height, nodeId
     });
 
-    if (result.status === "COMPLETED") {
+    if (result.ok) {
       const croppedUrl = (result.output as any).croppedUrl;
 
       if (workflowRunId) {
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ croppedUrl });
     } else {
-      throw new Error(`Crop task failed: ${result.status}`);
+      throw new Error(`Crop task failed: ${result.error}`);
     }
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

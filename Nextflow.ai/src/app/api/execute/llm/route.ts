@@ -29,15 +29,15 @@ export async function POST(req: NextRequest) {
     const nodeStartedAt = new Date();
 
     // Trigger and wait for the LLM task on Trigger.dev
-    const result = await tasks.triggerAndPoll("execute-gemini-llm", {
+    const result = await tasks.triggerAndWait("execute-gemini-llm", {
       model,
       systemPrompt,
       userMessage,
       imageBase64s,
       nodeId,
-    }, { pollIntervalMs: 1000 });
+    });
 
-    if (result.status === "COMPLETED") {
+    if (result.ok) {
       const output = (result.output as any).output;
 
       // Persistence
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       if (errorMsg.includes("429") || errorMsg.toLowerCase().includes("quota")) {
         return NextResponse.json({ error: "Gemini Quota Exceeded" }, { status: 429 });
       }
-      throw new Error(`Trigger.dev task failed with status: ${result.status}`);
+      throw new Error(`Trigger.dev task failed: ${result.error}`);
     }
 
   } catch (error: any) {
