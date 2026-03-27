@@ -20,7 +20,7 @@
 
 ### 📘 Overview
 
-**NextFlow AI** is a cutting-edge node-based visual programming environment. It allows users to visually compose complex AI pipelines by connecting text prompts, image inputs, video frame extraction, and automated fallback LLMs on an infinitely scalable canvas.
+**NextFlow AI** is a cutting-edge node-based visual environment. It allows users to visually compose AI pipelines by connecting text prompts, image inputs, video frame extraction, and automated fallback LLMs on an infinitely scalable canvas.
 
 ---
 
