@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop" width="100%" alt="Header Image" style="border-radius: 12px; margin-bottom: 20px;" />
+  <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop" width="100%" height="50%" alt="Header Image" style="border-radius: 12px; margin-bottom: 20px;" />
   
   <h1>🌌 NextFlow AI Orchestrator</h1>
   
@@ -109,7 +109,7 @@ npm install</code></pre>
   <li>
     <b>Environment Setup</b>
     <p>Create a <code>.env.local</code> file in the root directory and configure the following keys:</p>
-    <details>
+    <details open>
       <summary>🔑 Click to view required Environment Variables</summary>
       <pre><code># Clerk Authentication
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
