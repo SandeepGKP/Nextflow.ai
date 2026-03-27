@@ -29,19 +29,52 @@ export const executeGeminiLLM = task({
         ...(payload.systemPrompt && !payload.imageBase64s?.length ? { systemInstruction: payload.systemPrompt } : {}),
       }, { apiVersion: "v1beta" });
 
+      const imageInputs = payload.imageBase64s || [];
+      let internalAnalysis = "";
+
+      // INTERNAL CLASSIFICATION (HIDDEN ENRICHMENT)
+      if (imageInputs.length > 0) {
+        try {
+          const classifierModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1beta" });
+          const classifierParts: Part[] = [{ text: "Identify all distinct objects, text, colors, and layout elements in these images. List them clearly as comma-separated tags." }];
+          
+          for (const input of imageInputs) {
+            let data: string, mimeType = "image/jpeg";
+            if (input.startsWith("http")) {
+              const res = await fetch(input);
+              if (res.ok) {
+                data = Buffer.from(await res.arrayBuffer()).toString("base64");
+                mimeType = res.headers.get("content-type") || "image/jpeg";
+                classifierParts.push({ inlineData: { data, mimeType } });
+              }
+            } else if (input.includes(";base64,")) {
+              const [prefix, encoded] = input.split(";base64,");
+              classifierParts.push({ inlineData: { data: encoded, mimeType: prefix.split(":")[1] || "image/jpeg" } });
+            }
+          }
+          
+          if (classifierParts.length > 1) {
+            const analysisResult = await classifierModel.generateContent({ contents: [{ role: "user", parts: classifierParts }] });
+            internalAnalysis = analysisResult.response.text();
+          }
+        } catch (e) {
+          console.warn("[GeminiTask] Internal classification failed, proceeding with raw prompt.");
+        }
+      }
+
       let combinedText = payload.userMessage || "Please analyze these images.";
-      if (payload.systemPrompt && payload.imageBase64s?.length) {
-        combinedText = `CONTEXT/INSTRUCTIONS:\n${payload.systemPrompt}\n\nUSER REQUEST:\n${combinedText}`;
+      if (internalAnalysis) {
+        combinedText = `[INTERNAL IMAGE ANALYSIS: ${internalAnalysis}]\n\nUSER REQUEST: ${combinedText}`;
+      }
+      if (payload.systemPrompt) {
+        combinedText = `SYSTEM CONTEXT:\n${payload.systemPrompt}\n\n${combinedText}`;
       }
 
       const parts: Part[] = [{ text: combinedText }];
-      const imageInputs = payload.imageBase64s || [];
-
       if (imageInputs.length > 0) {
         for (const input of imageInputs) {
           if (!input || typeof input !== "string") continue;
-          let data: string;
-          let mimeType = "image/jpeg";
+          let data: string, mimeType = "image/jpeg";
           if (input.startsWith("http")) {
             const res = await fetch(input);
             if (!res.ok) continue;
@@ -51,9 +84,7 @@ export const executeGeminiLLM = task({
             const [prefix, encoded] = input.split(";base64,");
             data = encoded;
             mimeType = prefix.split(":")[1] || "image/jpeg";
-          } else {
-            data = input;
-          }
+          } else { data = input; }
           parts.push({ inlineData: { data, mimeType } });
         }
       }
