@@ -79,7 +79,7 @@ function CanvasInner() {
   const {
     nodes, edges, onNodesChange, onEdgesChange, onConnect,
     addNode, executeWorkflow, isExecuting, isSaving, saveWorkflow, exportWorkflow, importWorkflow, setNodes, setEdges,
-    executeNode, currentWorkflowName, setCurrentWorkflow, loadWorkflow, deleteWorkflow
+    executeNode, currentWorkflowName, setCurrentWorkflow, loadWorkflow, deleteWorkflow, setDirty
   } = useWorkflowStore();
 
   const { undo, redo, clear } = useWorkflowStore.temporal.getState();
@@ -109,6 +109,20 @@ function CanvasInner() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [undo, redo]);
+
+  const isDirty = useWorkflowStore((s) => s.isDirty);
+
+  // Unsaved changes browser warning
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = ""; // Standard way to trigger the "Leave site?" popup
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   const { screenToFlowPosition } = useReactFlow();
   const [contextMenu, setContextMenu] = useState<{ nodeId: string; top: number; left: number } | null>(null);
@@ -228,6 +242,7 @@ function CanvasInner() {
     setNodes([]);
     setEdges([]);
     setCurrentWorkflow(null, "Untitled Workflow");
+    setDirty(false);
   };
 
   return (

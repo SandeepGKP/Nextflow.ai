@@ -91,6 +91,8 @@ export interface WorkflowState {
   isSaving: boolean;
   currentWorkflowId: string | null;
   currentWorkflowName: string;
+  isDirty: boolean;
+  setDirty: (dirty: boolean) => void;
   setCurrentWorkflow: (id: string | null, name: string) => void;
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
@@ -277,14 +279,16 @@ export const useWorkflowStore = create<WorkflowState>()(
       isSaving: false,
       currentWorkflowId: null,
       currentWorkflowName: "My Workflow",
+      isDirty: false,
 
-  setCurrentWorkflow: (id, name) => set({ currentWorkflowId: id, currentWorkflowName: name }),
+  setDirty: (dirty: boolean) => set({ isDirty: dirty }),
+  setCurrentWorkflow: (id: string | null, name: string) => set({ currentWorkflowId: id, currentWorkflowName: name }),
   
   onNodesChange: (changes: NodeChange[]) => {
-    set({ nodes: applyNodeChanges(changes, get().nodes) });
+    set({ nodes: applyNodeChanges(changes, get().nodes), isDirty: true });
   },
   onEdgesChange: (changes: EdgeChange[]) => {
-    set({ edges: applyEdgeChanges(changes, get().edges) });
+    set({ edges: applyEdgeChanges(changes, get().edges), isDirty: true });
   },
   onConnect: (connection: Connection) => {
     set({
@@ -292,16 +296,18 @@ export const useWorkflowStore = create<WorkflowState>()(
         { ...connection, animated: true, markerEnd: { type: MarkerType.ArrowClosed, color: "#6366f1" }, style: { stroke: "#6366f1" } },
         get().edges
       ),
+      isDirty: true
     });
   },
-  setNodes: (nodes) => set({ nodes }),
-  setEdges: (edges) => set({ edges }),
-  addNode: (node) => set({ nodes: [...get().nodes, node] }),
+  setNodes: (nodes) => set({ nodes, isDirty: true }),
+  setEdges: (edges) => set({ edges, isDirty: true }),
+  addNode: (node) => set({ nodes: [...get().nodes, node], isDirty: true }),
   updateNodeData: (id, data) => {
     set({
       nodes: get().nodes.map((node) =>
         node.id === id ? { ...node, data: { ...node.data, ...data } } : node
       ),
+      isDirty: true
     });
   },
   addHistoryRun: (run) => set({ history: [run, ...get().history] }),
@@ -466,7 +472,7 @@ export const useWorkflowStore = create<WorkflowState>()(
       if (res.ok) {
         const data = await res.json();
         if (data.workflow?.id) {
-          set({ currentWorkflowId: data.workflow.id, currentWorkflowName: data.workflow.name });
+          set({ currentWorkflowId: data.workflow.id, currentWorkflowName: data.workflow.name, isDirty: false });
         }
       }
     } finally {
@@ -483,7 +489,8 @@ export const useWorkflowStore = create<WorkflowState>()(
         nodes: wf.json.nodes, 
         edges: wf.json.edges,
         currentWorkflowId: wf.id,
-        currentWorkflowName: wf.name
+        currentWorkflowName: wf.name,
+        isDirty: false
       });
     }
   },
@@ -506,7 +513,7 @@ export const useWorkflowStore = create<WorkflowState>()(
   importWorkflow: (json: string) => {
     try {
       const { nodes, edges } = JSON.parse(json);
-      set({ nodes, edges });
+      set({ nodes, edges, isDirty: true });
     } catch {
       console.error("Invalid workflow JSON");
     }
