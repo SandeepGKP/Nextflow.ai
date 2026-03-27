@@ -102,6 +102,10 @@ Create a `.env.local` file in the root directory:
 # Clerk Authentication
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL=/sign-in
+
 
 # AI & Media Keys
 GEMINI_API_KEY=AIzaSy...
