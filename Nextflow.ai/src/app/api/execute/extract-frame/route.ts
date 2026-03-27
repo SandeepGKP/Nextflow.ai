@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { tasks } from "@trigger.dev/sdk/v3";
+import { tasks, runs } from "@trigger.dev/sdk/v3";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -24,12 +24,27 @@ export async function POST(req: NextRequest) {
   try {
     const nodeStartedAt = new Date();
 
-    const result = await tasks.triggerAndWait("execute-extract-frame", {
+    const handle = await tasks.trigger("execute-extract-frame", {
       videoUrl, timestamp, nodeId
     });
 
-    if (result.ok) {
-      const frameUrl = (result.output as any).frameUrl;
+    let polledRun;
+    while (true) {
+      polledRun = await runs.retrieve(handle.id);
+      if (
+        polledRun.status === "COMPLETED" ||
+        polledRun.status === "FAILED" ||
+        polledRun.status === "CANCELED" ||
+        polledRun.status === "SYSTEM_FAILURE" ||
+        polledRun.status === "CRASHED"
+      ) {
+        break;
+      }
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    if (polledRun.status === "COMPLETED") {
+      const frameUrl = (polledRun.output as any).frameUrl;
 
       if (workflowRunId) {
         await prisma.nodeRun.create({
@@ -46,7 +61,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ frameUrl });
     } else {
-      throw new Error(`Extract frame task failed: ${result.error}`);
+      throw new Error(`Extract frame task failed: ${polledRun.status}`);
     }
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { tasks } from "@trigger.dev/sdk/v3";
+import { tasks, runs } from "@trigger.dev/sdk/v3";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -28,12 +28,27 @@ export async function POST(req: NextRequest) {
     const nodeStartedAt = new Date();
     
     // Trigger task
-    const result = await tasks.triggerAndWait("execute-crop-image", {
+    const handle = await tasks.trigger("execute-crop-image", {
       imageUrl, x, y, width, height, nodeId
     });
 
-    if (result.ok) {
-      const croppedUrl = (result.output as any).croppedUrl;
+    let polledRun;
+    while (true) {
+      polledRun = await runs.retrieve(handle.id);
+      if (
+        polledRun.status === "COMPLETED" ||
+        polledRun.status === "FAILED" ||
+        polledRun.status === "CANCELED" ||
+        polledRun.status === "SYSTEM_FAILURE" ||
+        polledRun.status === "CRASHED"
+      ) {
+        break;
+      }
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    if (polledRun.status === "COMPLETED") {
+      const croppedUrl = (polledRun.output as any).croppedUrl;
 
       if (workflowRunId) {
         await prisma.nodeRun.create({
@@ -50,7 +65,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ croppedUrl });
     } else {
-      throw new Error(`Crop task failed: ${result.error}`);
+      throw new Error(`Crop task failed: ${polledRun.status}`);
     }
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

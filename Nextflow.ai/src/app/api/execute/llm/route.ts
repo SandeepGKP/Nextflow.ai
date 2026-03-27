@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { tasks } from "@trigger.dev/sdk/v3";
+import { tasks, runs } from "@trigger.dev/sdk/v3";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/user";
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const nodeStartedAt = new Date();
 
     // Trigger and wait for the LLM task on Trigger.dev
-    const result = await tasks.triggerAndWait("execute-gemini-llm", {
+    const handle = await tasks.trigger("execute-gemini-llm", {
       model,
       systemPrompt,
       userMessage,
@@ -37,8 +37,23 @@ export async function POST(req: NextRequest) {
       nodeId,
     });
 
-    if (result.ok) {
-      const output = (result.output as any).output;
+    let polledRun;
+    while (true) {
+      polledRun = await runs.retrieve(handle.id);
+      if (
+        polledRun.status === "COMPLETED" ||
+        polledRun.status === "FAILED" ||
+        polledRun.status === "CANCELED" ||
+        polledRun.status === "SYSTEM_FAILURE" ||
+        polledRun.status === "CRASHED"
+      ) {
+        break;
+      }
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    if (polledRun.status === "COMPLETED") {
+      const output = (polledRun.output as any).output;
 
       // Persistence
       if (workflowRunId) {
@@ -59,11 +74,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ output });
     } else {
       // Check for 429/Quota errors to trigger frontend retry
-      const errorMsg = JSON.stringify(result);
+      const errorMsg = JSON.stringify(polledRun);
       if (errorMsg.includes("429") || errorMsg.toLowerCase().includes("quota")) {
         return NextResponse.json({ error: "Gemini Quota Exceeded" }, { status: 429 });
       }
-      throw new Error(`Trigger.dev task failed: ${result.error}`);
+      throw new Error(`Trigger.dev task failed: ${polledRun.status}`);
     }
 
   } catch (error: any) {
