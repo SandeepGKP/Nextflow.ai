@@ -112,17 +112,17 @@ npm install</code></pre>
     <details open>
       <summary>🔑 Click to view required Environment Variables</summary>
       <pre><code># Clerk Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...  # your clerk publishable key  
+CLERK_SECRET_KEY=sk_test_...  # your clerk secret key
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in   
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL=/sign-in
 
 # AI & Media Keys
 GEMINI_API_KEY=AIzaSy...           # Primary Multimodal LLM
 GROQ_API_KEY=gsk_...               # High-Availability Fallback
-NEXT_PUBLIC_TRANSLOADIT_AUTH_KEY=...
-TRANSLOADIT_AUTH_SECRET=...
+NEXT_PUBLIC_TRANSLOADIT_AUTH_KEY=...  # your transloadit auth key
+TRANSLOADIT_AUTH_SECRET=...  # your transloadit auth secret
 
 # Database & Infrastructure
 DATABASE_URL="postgresql://..."     # Neon Postgres URL
