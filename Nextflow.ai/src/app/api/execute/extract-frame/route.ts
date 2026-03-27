@@ -5,19 +5,29 @@ import { tasks, runs } from "@trigger.dev/sdk/v3";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
-  videoUrl: z.string().url(),
-  timestamp: z.string(),
+  videoUrl: z.string(),
+  timestamp: z.coerce.string().catch("0"),
   nodeId: z.string(),
-  workflowRunId: z.string().optional(),
+  workflowRunId: z.string().nullish(),
 });
 
 export async function POST(req: NextRequest) {
   const { userId: clerkId } = await auth();
   if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
+  const rawBody = await req.text();
+  let body;
+  try {
+    body = JSON.parse(rawBody);
+  } catch (err) {
+    console.error("JSON PARSE ERROR IN EXTRACT. RAW BODY TRUNCATED?:", rawBody.substring(0, 100), "...");
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
   const parsed = schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  if (!parsed.success) {
+    console.error("EXTRACT ZOD ERROR:", JSON.stringify(parsed.error.flatten(), null, 2));
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
 
   const { videoUrl, timestamp, nodeId, workflowRunId } = parsed.data;
 

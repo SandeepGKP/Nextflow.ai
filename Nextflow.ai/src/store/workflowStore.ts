@@ -168,17 +168,20 @@ function gatherInputs(nodeId: string, edges: Edge[], results: Record<string, any
 async function executeNodeFn(node: AppNode, inputs: Record<string, any>): Promise<any> {
   switch (node.type) {
     case "text":
-      return { output: node.data.text || "" };
+      if (!node.data.text || node.data.text.trim() === "") return { error: "Please write text before running the workflow" };
+      return { output: node.data.text };
 
     case "uploadImage":
-      return { imageUrl: node.data.imageUrl || null };
+      if (!node.data.imageUrl) return { error: "Please upload an image before running the workflow" };
+      return { imageUrl: node.data.imageUrl };
 
     case "uploadVideo":
-      return { videoUrl: node.data.videoUrl || null };
+      if (!node.data.videoUrl) return { error: "Please upload a video before running the workflow" };
+      return { videoUrl: node.data.videoUrl };
 
     case "cropImage": {
-      const imageUrl = inputs.image || node.data.imageUrl;
-      if (!imageUrl) return { error: "No image source found" };
+      const imageUrl = typeof inputs.image === "string" ? inputs.image : (inputs.image?.imageUrl || node.data.imageUrl);
+      if (!imageUrl || typeof imageUrl !== "string") return { error: "Please upload or connect an image before running the workflow" };
       const x = inputs.x ?? node.data.x ?? 0;
       const y = inputs.y ?? node.data.y ?? 0;
       const width = inputs.width ?? node.data.width ?? 100;
@@ -198,8 +201,8 @@ async function executeNodeFn(node: AppNode, inputs: Record<string, any>): Promis
     }
 
     case "extractFrame": {
-      const videoUrl = inputs.video || node.data.videoUrl;
-      if (!videoUrl) return { error: "No video source found" };
+      const videoUrl = typeof inputs.video === "string" ? inputs.video : (inputs.video?.videoUrl || node.data.videoUrl);
+      if (!videoUrl || typeof videoUrl !== "string") return { error: "Please upload or connect a video before running the workflow" };
       const timestamp = inputs.timestamp ?? node.data.timestamp ?? "0";
 
       const res = await fetch("/api/execute/extract-frame", {
@@ -350,10 +353,15 @@ export const useWorkflowStore = create<WorkflowState>()(
       const nodeStartedAt = Date.now();
       updateNodeData(nodeId, { status: "running" });
 
+      let isSuccess = false;
       try {
         const result = await executeNodeFn(node, { ...inputs, workflowRunId: dbRunId });
+        if (result?.error) {
+          throw new Error(result.error);
+        }
+        
         // results dictionary expects the primary output (for runLlm it's output, for others it's the URL)
-        results[nodeId] = result?.output || result?.croppedUrl || result?.frameUrl || result;
+        results[nodeId] = result?.output || result?.croppedUrl || result?.frameUrl || result?.imageUrl || result?.videoUrl || result;
         
         // Update local node state with the entire result object for visual preview
         updateNodeData(nodeId, { status: "success", ...result });
@@ -367,11 +375,14 @@ export const useWorkflowStore = create<WorkflowState>()(
           inputs, 
           outputs: result 
         });
+        isSuccess = true;
       } catch (err) {
         runStatus = "error";
-        updateNodeData(nodeId, { status: "error" });
+        updateNodeData(nodeId, { status: "error", error: err instanceof Error ? err.message : String(err) });
         nodeRuns.push({ nodeId, nodeType: node.type || "unknown", status: "error", startedAt: nodeStartedAt, finishedAt: Date.now(), inputs });
       }
+
+      if (!isSuccess) return; // Halt downstream execution
 
       // Trigger dependents
       const dependents = outEdgesMap.get(nodeId) || [];
@@ -417,6 +428,7 @@ export const useWorkflowStore = create<WorkflowState>()(
 
     try {
       const result = await executeNodeFn(node, inputs);
+      if (result?.error) throw new Error(result.error);
       
       // Update local node state with the entire result object
       updateNodeData(nodeId, { status: "success", ...result });
@@ -438,7 +450,7 @@ export const useWorkflowStore = create<WorkflowState>()(
         }],
       });
     } catch (err) {
-      updateNodeData(nodeId, { status: "error" });
+      updateNodeData(nodeId, { status: "error", error: err instanceof Error ? err.message : String(err) });
     }
   },
 

@@ -65,29 +65,76 @@ export const executeGeminiLLM = task({
       const isConflict = geminiErr.message?.includes("409") || geminiErr.message?.includes("status: 409");
       const isQuota = geminiErr.message?.includes("429") || geminiErr.message?.includes("quota");
       
-      console.warn(`[GeminiTask] Gemini failed (Status: ${isConflict ? '409' : (isQuota ? '429' : 'Error')}). Failing over to Groq...`);
+      console.warn(`[GeminiTask] Primary Gemini failed (Status: 429/409/Error). Attempting Gemini failover...`);
+
+      if (isQuota) {
+        // Try other Gemini vision models before resorting to Groq text
+        const backupModels = ["gemini-1.5-pro", "gemini-1.5-flash"];
+        for (const backup of backupModels) {
+          try {
+             console.log(`[GeminiTask] Trying backup model: ${backup}`);
+             const fallbackModel = genAI.getGenerativeModel({
+                 model: `models/${backup}`,
+                 ...(payload.systemPrompt && !payload.imageBase64s?.length ? { systemInstruction: payload.systemPrompt } : {}),
+             }, { apiVersion: "v1beta" });
+             
+             // 'parts' is block scoped to the first try, we need to rebuild it or access it.
+             // Rebuild parts carefully:
+             let combinedText = payload.userMessage || "Please analyze these images.";
+             if (payload.systemPrompt && payload.imageBase64s?.length) combinedText = `CONTEXT/INSTRUCTIONS:\n${payload.systemPrompt}\n\nUSER REQUEST:\n${combinedText}`;
+             const fallbackParts: Part[] = [{ text: combinedText }];
+             const imageInputs = payload.imageBase64s || [];
+             if (imageInputs.length > 0) {
+               for (const input of imageInputs) {
+                 if (!input || typeof input !== "string") continue;
+                 let data: string, mimeType = "image/jpeg";
+                 if (input.startsWith("http")) {
+                   const res = await fetch(input);
+                   if (!res.ok) continue;
+                   data = Buffer.from(await res.arrayBuffer()).toString("base64");
+                   mimeType = res.headers.get("content-type") || "image/jpeg";
+                 } else if (input.includes(";base64,")) {
+                   const [prefix, encoded] = input.split(";base64,");
+                   data = encoded;
+                   mimeType = prefix.split(":")[1] || "image/jpeg";
+                 } else { data = input; }
+                 fallbackParts.push({ inlineData: { data, mimeType } });
+               }
+             }
+
+             const result = await fallbackModel.generateContent({ contents: [{ role: "user", parts: fallbackParts }] });
+             return { output: result.response.text() };
+          } catch (e) {
+             console.warn(`[GeminiTask] Backup ${backup} failed.`);
+          }
+        }
+      }
+
+      console.warn(`[GeminiTask] All Gemini fallback models exhausted. Failing over to Groq...`);
 
       // 2. FALLBACK TO GROQ
       try {
         const imageInputs = payload.imageBase64s || [];
-        const groqParts: any[] = [{ type: "text", text: payload.userMessage || "Analyze this." }];
-        
-        if (payload.systemPrompt) {
-          groqParts.unshift({ type: "text", text: `SYSTEM: ${payload.systemPrompt}` });
-        }
+        let finalContent: string | any[];
 
-        // Support images in Groq (Llama 3.2 Vision)
-        for (const img of imageInputs) {
-          if (img.startsWith("http")) {
-             groqParts.push({ type: "image_url", image_url: { url: img } });
-          } else if (img.includes(";base64,")) {
-             groqParts.push({ type: "image_url", image_url: { url: img } });
+        if (imageInputs.length > 0) {
+          const groqParts: any[] = [{ type: "text", text: payload.userMessage || "Analyze this." }];
+          if (payload.systemPrompt) {
+            groqParts.unshift({ type: "text", text: `SYSTEM: ${payload.systemPrompt}` });
           }
+          for (const img of imageInputs) {
+            if (img.startsWith("http") || img.includes(";base64,")) {
+               groqParts.push({ type: "image_url", image_url: { url: img } });
+            }
+          }
+          finalContent = groqParts;
+        } else {
+          finalContent = `${payload.systemPrompt ? `SYSTEM: ${payload.systemPrompt}\n\n` : ""}${payload.userMessage || "Hello"}`;
         }
 
         const completion = await groq.chat.completions.create({
-          messages: [{ role: "user", content: groqParts as any }],
-          model: "qwen/qwen3-32b", // Requested fallback model
+          messages: [{ role: "user", content: finalContent as any }],
+          model: "meta-llama/llama-4-scout-17b-16e-instruct", // Requested fallback model
         });
 
         const content = completion.choices[0]?.message?.content || "";

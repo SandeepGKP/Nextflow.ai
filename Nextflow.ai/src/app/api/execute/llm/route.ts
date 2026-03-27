@@ -7,11 +7,11 @@ import { getOrCreateUser } from "@/lib/user";
 
 const executeSchema = z.object({
   model: z.string(),
-  systemPrompt: z.string().optional(),
+  systemPrompt: z.string().nullish(),
   userMessage: z.string(),
-  imageBase64s: z.array(z.string()).optional(),
+  imageBase64s: z.array(z.string()).nullish(),
   nodeId: z.string(),
-  workflowRunId: z.string().optional(),
+  workflowRunId: z.string().nullish(),
 });
 
 export async function POST(req: NextRequest) {

@@ -5,22 +5,32 @@ import { tasks, runs } from "@trigger.dev/sdk/v3";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
-  imageUrl: z.string().url(),
-  x: z.coerce.number(),
-  y: z.coerce.number(),
-  width: z.coerce.number(),
-  height: z.coerce.number(),
+  imageUrl: z.string(),
+  x: z.coerce.number().catch(0),
+  y: z.coerce.number().catch(0),
+  width: z.coerce.number().catch(100),
+  height: z.coerce.number().catch(100),
   nodeId: z.string(),
-  workflowRunId: z.string().optional(),
+  workflowRunId: z.string().nullish(),
 });
 
 export async function POST(req: NextRequest) {
   const { userId: clerkId } = await auth();
   if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
+  const rawBody = await req.text();
+  let body;
+  try {
+    body = JSON.parse(rawBody);
+  } catch (err) {
+    console.error("JSON PARSE ERROR IN CROP. RAW BODY TRUNCATED?:", rawBody.substring(0, 100), "...");
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
   const parsed = schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  if (!parsed.success) {
+    console.error("CROP ZOD ERROR:", JSON.stringify(parsed.error.flatten(), null, 2));
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
 
   const { imageUrl, x, y, width, height, nodeId, workflowRunId } = parsed.data;
 

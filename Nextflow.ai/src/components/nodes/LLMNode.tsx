@@ -13,6 +13,7 @@ import BaseNode from "./BaseNode";
 import { useWorkflowStore, BaseNodeData } from "@/store/workflowStore";
 import { Maximize2, Minimize2, Copy, Check } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const MODELS = [
   { value: "gemini-1.5-flash",    label: "Gemini 1.5 Flash" },
@@ -125,17 +126,24 @@ export default function LLMNode({ id, data, selected }: { id: string; data: Base
             
             <div className="w-full flex-grow bg-zinc-950/60 border border-emerald-800/40 rounded-lg p-2 text-[13px] text-zinc-300 overflow-y-auto shadow-inner custom-scrollbar-premium">
               <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
                 components={{
                   h1: ({node, ...props}) => <h1 className="text-lg font-bold text-zinc-100 my-2" {...props} />,
                   h2: ({node, ...props}) => <h2 className="text-md font-bold text-zinc-100 my-2" {...props} />,
                   h3: ({node, ...props}) => <h3 className="text-sm font-bold text-zinc-200 my-1" {...props} />,
-                  p: ({node, ...props}) => <p className="my-1.5 leading-relaxed" {...props} />,
+                  p: ({node, ...props}) => <p className="my-1.5 leading-relaxed whitespace-pre-wrap" {...props} />,
                   strong: ({node, ...props}) => <strong className="font-bold text-emerald-400" {...props} />,
                   em: ({node, ...props}) => <em className="italic text-zinc-200" {...props} />,
                   ul: ({node, ...props}) => <ul className="list-disc pl-5 my-1.5" {...props} />,
                   ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-1.5" {...props} />,
                   li: ({node, ...props}) => <li className="my-0.5" {...props} />,
                   blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-emerald-500/50 pl-3 my-2 text-zinc-400 italic" {...props} />,
+                  table: ({node, ...props}) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-zinc-700/50 border border-zinc-700/50 rounded-lg text-sm shadow-sm" {...props} /></div>,
+                  thead: ({node, ...props}) => <thead className="bg-zinc-800/50" {...props} />,
+                  tbody: ({node, ...props}) => <tbody className="divide-y divide-zinc-700/50 bg-zinc-900/20" {...props} />,
+                  tr: ({node, ...props}) => <tr className="hover:bg-zinc-800/20 transition" {...props} />,
+                  th: ({node, ...props}) => <th className="px-4 py-2.5 text-left text-xs font-semibold text-emerald-400 uppercase tracking-wider" {...props} />,
+                  td: ({node, ...props}) => <td className="px-4 py-2.5 text-zinc-400 whitespace-nowrap" {...props} />,
                   code: ({node, inlineClassName, className, children, ...props}: any) => {
                     const match = /language-(\w+)/.exec(className || '');
                     return !inlineClassName && match ? (
@@ -185,17 +193,24 @@ export default function LLMNode({ id, data, selected }: { id: string; data: Base
                   <div className="p-8 lg:p-12 overflow-y-auto custom-scrollbar-premium">
                     <div className="text-zinc-100 text-base lg:text-lg leading-relaxed font-sans pb-10">
                       <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
                         components={{
                           h1: ({node, ...props}) => <h1 className="text-3xl font-bold text-white mb-6 mt-4 border-b border-zinc-800 pb-2" {...props} />,
                           h2: ({node, ...props}) => <h2 className="text-2xl font-bold text-white mb-4 mt-6" {...props} />,
                           h3: ({node, ...props}) => <h3 className="text-xl font-bold text-zinc-200 mb-3 mt-5" {...props} />,
-                          p: ({node, ...props}) => <p className="mb-4 leading-relaxed" {...props} />,
+                          p: ({node, ...props}) => <p className="mb-4 leading-relaxed whitespace-pre-wrap" {...props} />,
                           strong: ({node, ...props}) => <strong className="font-bold text-emerald-400" {...props} />,
                           em: ({node, ...props}) => <em className="italic text-zinc-200" {...props} />,
                           ul: ({node, ...props}) => <ul className="list-disc pl-8 mb-4 space-y-2" {...props} />,
                           ol: ({node, ...props}) => <ol className="list-decimal pl-8 mb-4 space-y-2" {...props} />,
                           li: ({node, ...props}) => <li className="pl-1" {...props} />,
                           blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-emerald-500/50 pl-4 py-1 my-4 bg-zinc-800/30 text-zinc-300 italic rounded-r-lg" {...props} />,
+                          table: ({node, ...props}) => <div className="overflow-x-auto my-6"><table className="min-w-full divide-y divide-zinc-800 border border-zinc-800 rounded-xl text-base shadow-xl" {...props} /></div>,
+                          thead: ({node, ...props}) => <thead className="bg-zinc-900/50" {...props} />,
+                          tbody: ({node, ...props}) => <tbody className="divide-y divide-zinc-800 bg-zinc-900/20" {...props} />,
+                          tr: ({node, ...props}) => <tr className="hover:bg-zinc-800/30 transition" {...props} />,
+                          th: ({node, ...props}) => <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-400 uppercase tracking-wider" {...props} />,
+                          td: ({node, ...props}) => <td className="px-6 py-4 text-zinc-300 whitespace-nowrap" {...props} />,
                           code: ({node, inlineClassName, className, children, ...props}: any) => {
                             const match = /language-(\w+)/.exec(className || '');
                             return !inlineClassName && match ? (

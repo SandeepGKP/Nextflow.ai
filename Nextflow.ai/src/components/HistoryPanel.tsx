@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useWorkflowStore, WorkflowState, WorkflowRun, NodeRunEntry } from "@/store/workflowStore";
 import { CheckCircle, XCircle, Clock, ChevronDown, ChevronRight, Trash2, Eraser } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const statusColor: Record<string, string> = {
   success: "text-emerald-400",
@@ -106,17 +107,24 @@ export default function HistoryPanel() {
                                 ) : nr.outputs?.output ? (
                                   <div className="text-zinc-400 line-clamp-6 leading-tight max-w-none pb-1 font-sans">
                                     <ReactMarkdown
+                                      remarkPlugins={[remarkGfm]}
                                       components={{
                                         h1: ({node, ...props}) => <h1 className="text-sm font-bold text-white my-1" {...props} />,
                                         h2: ({node, ...props}) => <h2 className="text-xs font-bold text-white my-1" {...props} />,
                                         h3: ({node, ...props}) => <h3 className="text-xs font-bold text-zinc-200 my-0.5" {...props} />,
-                                        p: ({node, ...props}) => <p className="my-1" {...props} />,
+                                        p: ({node, ...props}) => <p className="my-1 whitespace-pre-wrap" {...props} />,
                                         strong: ({node, ...props}) => <strong className="font-bold text-emerald-400" {...props} />,
                                         em: ({node, ...props}) => <em className="italic text-zinc-200" {...props} />,
                                         ul: ({node, ...props}) => <ul className="list-disc pl-4 my-1" {...props} />,
                                         ol: ({node, ...props}) => <ol className="list-decimal pl-4 my-1" {...props} />,
                                         li: ({node, ...props}) => <li className="my-0.5" {...props} />,
                                         blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-emerald-500/50 pl-2 my-1 text-zinc-500 italic" {...props} />,
+                                        table: ({node, ...props}) => <div className="overflow-x-auto my-2"><table className="min-w-full divide-y divide-zinc-700/50 border border-zinc-700/50 rounded text-[10px] shadow-sm" {...props} /></div>,
+                                        thead: ({node, ...props}) => <thead className="bg-zinc-800/50" {...props} />,
+                                        tbody: ({node, ...props}) => <tbody className="divide-y divide-zinc-700/50 bg-zinc-900/20" {...props} />,
+                                        tr: ({node, ...props}) => <tr className="hover:bg-zinc-800/20 transition" {...props} />,
+                                        th: ({node, ...props}) => <th className="px-2 py-1.5 text-left font-semibold text-emerald-400 uppercase tracking-wider" {...props} />,
+                                        td: ({node, ...props}) => <td className="px-2 py-1.5 text-zinc-300 whitespace-nowrap" {...props} />,
                                         code: ({node, inlineClassName, className, children, ...props}: any) => {
                                           const match = /language-(\w+)/.exec(className || '');
                                           return !inlineClassName && match ? (
@@ -131,6 +139,15 @@ export default function HistoryPanel() {
                                     >
                                       {nr.outputs.output}
                                     </ReactMarkdown>
+                                  </div>
+                                ) : (nr.outputs?.croppedUrl || nr.outputs?.frameUrl || nr.outputs?.imageUrl || nr.outputs?.videoUrl) ? (
+                                  <div className="pb-1 mt-1">
+                                    {nr.outputs?.videoUrl ? (
+                                      <video src={nr.outputs.videoUrl} controls className="max-h-24 rounded object-contain border border-zinc-700/50" />
+                                    ) : (
+                                      /* eslint-disable-next-line @next/next/no-img-element */
+                                      <img src={nr.outputs.croppedUrl || nr.outputs.frameUrl || nr.outputs.imageUrl} alt="Output" className="max-h-24 rounded object-contain border border-zinc-700/50" />
+                                    )}
                                   </div>
                                 ) : (
                                   <span className="text-zinc-600 italic">No output captured</span>
