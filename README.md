@@ -1,159 +1,176 @@
 <div align="center">
-  <br />
-  <h1 align="center">🌌 NextFlow AI Orchestrator 🚀</h1>
+  <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop" width="100%" alt="Header Image" style="border-radius: 12px; margin-bottom: 20px;" />
+  
+  <h1>🌌 NextFlow AI Orchestrator</h1>
+  
   <p align="center">
-    <strong>A unified, visual Directed Acyclic Graph (DAG) workflow engine for multimodal generative AI automation.</strong>
+    <img src="https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=next.js&logoColor=white" />
+    <img src="https://img.shields.io/badge/Tailwind_4-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+    <img src="https://img.shields.io/badge/Trigger.dev_v3-3B82F6?style=for-the-badge&logo=fastapi&logoColor=white" />
+    <img src="https://img.shields.io/badge/Prisma_Postgres-2D3748?style=for-the-badge&logo=prisma&logoColor=white" />
+    <img src="https://img.shields.io/badge/Clerk_Auth-6C47FF?style=for-the-badge&logo=clerk&logoColor=white" />
   </p>
-  <br />
+
+  <p align="center">
+    <b>A professional-grade, visual DAG engine for industrial AI media automation.</b>
+  </p>
 </div>
 
 ---
 
+### 📘 Overview
+
 **NextFlow AI** is a cutting-edge node-based visual programming environment. It allows users to visually compose complex AI pipelines by connecting text prompts, image inputs, video frame extraction, and automated fallback LLMs on an infinitely scalable canvas.
 
-This repository features a **unified architecture**, where the Next.js frontend and the Trigger.dev background workers coexist in a single, high-performance codebase for simplified development and deployment.
+---
+
+### ⚡ Core Capabilities
+
+<table width="100%">
+  <tr>
+    <td width="50%" valign="top">
+      <h4>⚡ Unified Execution Engine</h4>
+      <p>Fully dependency-aware asynchronous scheduler powered by <b>Trigger.dev v3</b>. Node execution automatically cascades as multi-input convergence points resolve.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h4>🛡️ Multi-Model Resilience</h4>
+      <p>Intelligent failover that cascades from <b>Gemini 2.0</b> to <b>Groq (Llama 4)</b>, ensuring 100% vision task continuity during API rate limits.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h4>🎥 Cloud Media Processing</h4>
+      <p>Integrated with <b>Transloadit</b> for robust FFMPEG tasks including split-second video frame extraction and percentage-based image cropping.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h4>🖱️ Premium Visual Canvas</h4>
+      <p>Built on <b>React Flow v11</b> with glassmorphism UI, resizable nodes, and real-time execution animations (pulsating glow).</p>
+    </td>
+  </tr>
+</table>
 
 ---
 
-## 📑 Table of Contents
+### 🏗️ Technical Architecture
 
-- [✨ Core Features](#-core-features)
-- [🏗️ Unified Architecture](#️-unified-architecture)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [🚀 Getting Started](#-getting-started)
-  - [1. Clone & Install](#1-clone--install)
-  - [2. Environment Variables](#2-environment-variables)
-  - [3. Database & Prisma](#3-database--prisma)
-  - [4. Running the App](#4-running-the-app)
-- [🧠 Using the App](#-using-the-app)
+NextFlow uses a modern, **unified repository structure** for both the web interface and long-running background workers:
 
----
-
-## ✨ Core Features
-
-*   **⚡ Unified Execution Engine**: Fully dependency-aware asynchronous scheduler powered by Trigger.dev. Node execution automatically cascades as multi-input convergence points resolve.
-*   **👁️ Multimodal AI Capabilities**:
-    *   Native integration with **Google Gemini (2.0/2.5 Flash/Pro)** for high-speed, cost-effective multimodal vision workflows.
-    *   🛡️ **High-Availability Fallback**: If the primary Google API hits rate limits or conflicts, nodes automatically pivot to **Groq's Qwen-32B** or **Llama 3.2** for guaranteed execution.
-*   **🎥 Cloud Media Processing**: Integrated with **Transloadit** for robust, cloud-native FFMPEG tasks including split-second video frame extraction and percentage-based image cropping.
-*   **🖱️ Premium Visual Canvas**:
-    *   Built on **React Flow v11**, featuring resizable nodes (`@reactflow/node-resizer`) and fluid glassmorphism UI.
-    *   Immersive **Markdown Readers** for AI results, featuring full-screen focus modes and rich typography.
-
----
-
-## 🏗️ Unified Architecture
-
-NextFlow uses a modern, single-repository structure for both the web interface and background processing:
+<details open>
+<summary>📂 Click to view Detailed Project Structure</summary>
 
 ```text
 NextFlow/
-├── prisma/               # Unified Database Schema (Postgres)
-├── public/               # Static Assets
+├── prisma/                 # Database Schema & Migrations
+│   └── schema.prisma       # PostgreSQL Models (Neon)
 ├── src/
-│   ├── app/              # Next.js App Router (Pages & API)
-│   │   ├── api/          # Unified API Layer (Execute, History, Run)
-│   ├── trigger/          # Trigger.dev v3 Background Workers
-│   │   ├── geminiTask.ts # LLM Node Logic
-│   │   └── ffmpegTasks.ts# Media Node Logic
-│   ├── components/       # Visual Canvas & UI Components
-│   ├── lib/              # Shared Utilities (Prisma, Clerk)
-│   ├── store/            # Unified State Management (Zustand + Zundo)
-│   └── proxy.ts          # Root Authentication Middleware
-├── trigger.config.ts     # Background Worker Configuration
-└── package.json          # Combined Scripts & Dependencies
+│   ├── app/                # Next.js App Router
+│   │   ├── api/            # Serverless Route Handlers
+│   │   │   ├── execute/    # Node Execution Logic
+│   │   │   ├── history/    # Persistence & Metrics
+│   │   │   └── workflows/  # Workflow CRUD Operations
+│   │   ├── sign-in/[[...]] # Clerk Authentication
+│   │   └── layout.tsx      # Global UI Context
+│   ├── components/         # React Components
+│   │   ├── canvas/         # React Flow Logic & UI
+│   │   ├── nodes/          # Specialized AI/Media Nodes
+│   │   └── HistoryPanel.tsx# Progress & Logs Sidebar
+│   ├── trigger/            # Background Tasks (Trigger.dev)
+│   │   ├── geminiTask.ts   # Multimodal LLM Logic
+│   │   ├── ffmpegTasks.ts  # Media Engine (FFMPEG)
+│   │   └── orchestrator.ts # DAG Execution Manager
+│   ├── store/              # State (Zustand + Zundo Undo/Redo)
+│   └── lib/                # Shared Prisma & Auth Clients
+├── .env.local              # Project Secrets & Private Keys
+├── trigger.config.ts       # Worker Orchestration Config
+└── package.json            # Scripts & Universal Dependencies
 ```
+</details>
 
 ---
 
-## 🛠️ Technology Stack
+### 🚀 Setup & Launch
 
-- **Framework**: Next.js (App Router, React 19)
-- **Visual Engine**: React Flow (DAG Visualization)
-- **Background Worker**: Trigger.dev v3 (Task Orchestration)
-- **Database**: Prisma ORM + Neon Serverless Postgres
-- **Auth**: Clerk (Identity Management)
-- **Styling**: TailwindCSS 4 (Modern CSS Architecture)
-- **State**: Zustand + Zundo (Undo/Redo Canvas History)
-
----
-
-## 🚀 Getting Started
-
-To run NextFlow AI, you must launch both the Next.js server and the Trigger.dev worker from the project root.
-
-### Prerequisites
-- **Node.js**: v20+
-- Accounts for: [Clerk](https://clerk.com), [Neon Postgres](https://neon.tech), [Gemini AI Studio](https://aistudio.google.com/), and [Trigger.dev](https://trigger.dev/).
-
-### 1. Clone & Install
-
-```bash
-git clone https://github.com/your-username/nextflow.git
-cd nextflow
-npm install
-```
-
-### 2. Environment Variables
-
-Create a `.env.local` file in the root directory:
-
-```env
-# Clerk Authentication
+<ol>
+  <li>
+    <b>Prerequisites</b>
+    <p>Ensure you have <b>Node.js v20+</b> and <b>Git</b> installed. You will also need accounts for:</p>
+    <ul>
+      <li><a href="https://clerk.com">Clerk</a> (Authentication)</li>
+      <li><a href="https://neon.tech">Neon Postgres</a> (Database)</li>
+      <li><a href="https://aistudio.google.com/">Gemini AI Studio</a> (AI API)</li>
+      <li><a href="https://trigger.dev/">Trigger.dev</a> (Background Workers)</li>
+    </ul>
+  </li>
+  <li>
+    <b>Clone & Install</b>
+    <pre><code>git clone https://github.com/SandeepGKP/Nextflow.ai.git
+npm install</code></pre>
+  </li>
+  <li>
+    <b>Environment Setup</b>
+    <p>Create a <code>.env.local</code> file in the root directory and configure the following keys:</p>
+    <details>
+      <summary>🔑 Click to view required Environment Variables</summary>
+      <pre><code># Clerk Authentication
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL=/sign-in
 
-
 # AI & Media Keys
-GEMINI_API_KEY=AIzaSy...   // for primary
-GROQ_API_KEY=gsk_...   // for fallback
-NEXT_PUBLIC_TRANSLOADIT_AUTH_KEY=5ddd...
-TRANSLOADIT_AUTH_SECRET=46ce...
+GEMINI_API_KEY=AIzaSy...           # Primary Multimodal LLM
+GROQ_API_KEY=gsk_...               # High-Availability Fallback
+NEXT_PUBLIC_TRANSLOADIT_AUTH_KEY=...
+TRANSLOADIT_AUTH_SECRET=...
 
-# Database & Trigger.dev
-DATABASE_URL="postgresql://user:pass@neon.tech/neondb?sslmode=require"
-TRIGGER_SECRET_KEY=tr_dev_...
-```
-
-### 3. Database & Prisma
-
-Initialize your database schema and local client:
-
-```bash
-npx prisma db push
-npx prisma generate
-```
-
-### 4. Running the App
-
-You must run these in two separate terminal windows:
-
-**Terminal 1 (Web Interface):**
-```bash
-npm run dev
-# App live at http://localhost:3000
-```
-
-**Terminal 2 (Background Worker):**
-```bash
-npm run dev:trigger
-# This starts the local worker for executing AI & Media tasks
-```
+# Database & Infrastructure
+DATABASE_URL="postgresql://..."     # Neon Postgres URL
+TRIGGER_SECRET_KEY=tr_dev_...       # Trigger.dev Secret Key
+</code></pre>
+    </details>
+  </li>
+  <li>
+    <b>Database Initialization</b>
+    <pre><code>npx prisma db push
+npx prisma generate</code></pre>
+  </li>
+  <li>
+    <b>Execution (Two Terminals)</b>
+    <pre><code>npm run dev          # Terminal 1: Web UI
+npm run dev:trigger  # Terminal 2: AI Engine</code></pre>
+  </li>
+</ol>
 
 ---
 
-## 🧠 Using the App
+### ☁️ Deployment
 
-1. **Composition**: Drag & Drop nodes (Text, Image, LLM, etc.) onto the canvas.
-2. **Connections**: Logically link outputs to inputs to build your pipeline.
-3. **Execution**: Click **Run Workflow** to trigger the topological sort and execute the DAG through Trigger.dev.
-4. **History**: View past results and node-specific metrics in the **History Panel**.
+To go live, follow these professional deployment steps:
+
+*   **Frontend**: Push your code to <b>GitHub</b> and connect it to <b>Vercel</b>. All <code>.env.local</code> keys must be added as "Environment Variables" in the Vercel Dashboard.
+*   **Background Worker**: Deploy your tasks to <b>Trigger.dev Cloud</b> using:
+    <pre><code>npm run deploy:trigger</code></pre>
+*   **Database**: Ensure your <b>Neon Postgres</b> instance is accessible and the <code>DATABASE_URL</code> is correctly set on both Vercel and Trigger.dev.
+
+---
+
+---
+
+### 🧠 Future Roadmap & Brainstorming
+
+Current goals for **NextFlow v2.0**:
+
+- [ ] **Agentic Memory**: Store conversation context across entire workflows for "Long-Term Memory."
+- [ ] **Collaborative Canvas**: Multi-player real-time editing (like Figma) using WebSockets.
+- [ ] **Action Nodes**: Integrate **Slack/Discord/Stripe** to turn text/media outputs into real-world actions.
+- [ ] **Template Marketplace**: Community-shared "Recipes" for complex task automation.
+- [ ] **Edge Execution**: Moving lighter media tasks to client-side WebAssembly (WASM) for faster processing.
 
 ---
 
 <div align="center">
-  <sub>Built with ❤️ utilizing Next.js and Trigger.dev v3 Background Workers.</sub>
+  <sub>Built with ❤️ utilizing Next.js 15, Trigger.dev v3, and Google Gemini.</sub>
+  <br/>
+  <sub>&copy; 2026 NextFlow AI Orchestrator</sub>
 </div>

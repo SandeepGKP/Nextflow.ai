@@ -43,3 +43,6 @@ next-env.d.ts
 # clerk configuration (can include secrets)
 # trigger.dev
 /.trigger/
+.env.local
+AGENTS.md
+CLAUDE.md
