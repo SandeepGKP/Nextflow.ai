@@ -274,7 +274,7 @@ function CanvasInner() {
           className="!bottom-4 !right-4 !bg-zinc-900 !border-zinc-800 rounded-lg"
         />
         {/* Top toolbar */}
-        <Panel position="top-center" className="flex items-center gap-2 flex-wrap bg-zinc-950/80 p-1.5 rounded-lg border border-zinc-800 shadow-xl backdrop-blur-md">
+        <Panel position="top-center" className="flex w-full justify-center items-center gap-2 flex-wrap bg-zinc-950/80 p-1.5 rounded-lg border border-zinc-800 shadow-xl backdrop-blur-md">
           <input
             type="text"
             value={currentWorkflowName}
