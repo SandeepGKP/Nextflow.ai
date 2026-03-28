@@ -18,9 +18,9 @@ async function pollAssembly(assemblyUrl: string, maxAttempts = 30): Promise<stri
     const res = await fetch(assemblyUrl);
     const data = (await res.json()) as any;
     if (data.ok === "ASSEMBLY_COMPLETED") {
-       const results = Object.values(data.results || {}).flat() as any[];
-       if (results.length > 0) return results[0].ssl_url || results[0].url;
-       throw new Error("Assembly completed but no results found");
+      const results = Object.values(data.results || {}).flat() as any[];
+      if (results.length > 0) return results[0].ssl_url || results[0].url;
+      throw new Error("Assembly completed but no results found");
     }
     if (data.error) throw new Error(`Transloadit error: ${data.message || data.error}`);
   }
@@ -72,7 +72,7 @@ export const executeCropImage = task({
 
     const assembly = (await res.json()) as any;
     if (assembly.error) throw new Error(`Transloadit failed: ${assembly.message}`);
-    
+
     const croppedUrl = await pollAssembly(assembly.assembly_ssl_url || assembly.assembly_url);
     return { croppedUrl };
   },
@@ -89,7 +89,11 @@ export const executeExtractFrame = task({
         extract: {
           use: "import",
           robot: "/video/thumbs",
-          offsets: [parseFloat(payload.timestamp || "0")],
+          offsets: [
+            (payload.timestamp?.includes("%") || payload.timestamp?.includes(":"))
+              ? payload.timestamp 
+              : parseFloat(payload.timestamp || "0")
+          ],
           count: 1,
           format: "jpg"
         }
@@ -105,7 +109,7 @@ export const executeExtractFrame = task({
 
     const assembly = (await res.json()) as any;
     if (assembly.error) throw new Error(`Transloadit failed: ${assembly.message}`);
-    
+
     const frameUrl = await pollAssembly(assembly.assembly_ssl_url || assembly.assembly_url);
     return { frameUrl };
   },
