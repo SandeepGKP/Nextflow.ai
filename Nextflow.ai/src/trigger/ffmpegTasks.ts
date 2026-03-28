@@ -90,9 +90,11 @@ export const executeExtractFrame = task({
           use: "import",
           robot: "/video/thumbs",
           offsets: [
-            (payload.timestamp?.includes("%") || payload.timestamp?.includes(":"))
-              ? payload.timestamp 
-              : parseFloat(payload.timestamp || "0")
+            payload.timestamp?.includes(":")
+              ? payload.timestamp.split(":").reduce((a, v) => a * 60 + (+v), 0) // Case 1: 0:02 → 2s
+              : payload.timestamp?.includes("%")
+                ? payload.timestamp // Case 2: 50% → "50%" (String)
+                : payload.timestamp + "%" // Case 3: default 0s
           ],
           count: 1,
           format: "jpg"
