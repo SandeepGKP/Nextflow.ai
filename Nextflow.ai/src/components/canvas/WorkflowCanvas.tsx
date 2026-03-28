@@ -127,9 +127,23 @@ function CanvasInner() {
   const { screenToFlowPosition } = useReactFlow();
   const [contextMenu, setContextMenu] = useState<{ nodeId: string; top: number; left: number } | null>(null);
 
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [loadSuccess, setLoadSuccess] = useState(false);
+
   const [showLoadMenu, setShowLoadMenu] = useState(false);
   const [isFetchingWorkflows, setIsFetchingWorkflows] = useState(false);
   const [savedWorkflows, setSavedWorkflows] = useState<any[]>([]);
+
+  const onSave = async () => {
+    setSaveStatus('saving');
+    try {
+      await saveWorkflow(currentWorkflowName);
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 1000);
+    } catch {
+      setSaveStatus('idle');
+    }
+  };
 
   const fetchSavedWorkflows = async () => {
     setIsFetchingWorkflows(true);
@@ -282,12 +296,24 @@ function CanvasInner() {
             className="bg-zinc-900 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500 w-40 hover:bg-zinc-800 transition"
           />
           <button
-            onClick={() => saveWorkflow(currentWorkflowName)}
-            disabled={isSaving}
-            className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 px-3 py-1.5 rounded-md text-xs transition border border-zinc-700"
+            onClick={onSave}
+            disabled={saveStatus !== 'idle'}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition border ${
+              saveStatus === 'saved' 
+                ? 'bg-green-500/20 border-green-500/50 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]' 
+                : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
+            }`}
           >
-            {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" /> : <Save className="w-3.5 h-3.5" />}
-            {isSaving ? "Saving..." : "Save"}
+            {saveStatus === 'saving' ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+            ) : saveStatus === 'saved' ? (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <Save className="w-3.5 h-3.5" />
+            )}
+            {saveStatus === 'saving' ? "Saving..." : saveStatus === 'saved' ? "Saved!" : "Save"}
           </button>
 
           <div className="relative">
@@ -297,14 +323,22 @@ function CanvasInner() {
                 setShowLoadMenu(!showLoadMenu);
               }}
               disabled={isFetchingWorkflows}
-              className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 px-3 py-1.5 rounded-md text-xs transition border border-zinc-700"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition border ${
+                loadSuccess 
+                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' 
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
+              }`}
             >
               {isFetchingWorkflows ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+              ) : loadSuccess ? (
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
               ) : (
                 <FolderOpen className="w-3.5 h-3.5" />
               )}
-              {isFetchingWorkflows ? "Fetching..." : "Load"}
+              {isFetchingWorkflows ? "Fetching..." : loadSuccess ? "Loaded!" : "Load"}
             </button>
             {showLoadMenu && (
               <div className="absolute top-10 left-0 w-48 bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50 overflow-hidden flex flex-col max-h-64 overflow-y-auto custom-scrollbar-premium">
@@ -314,9 +348,11 @@ function CanvasInner() {
                   savedWorkflows.map(wf => (
                     <div key={wf.id} className="group flex items-center border-b border-zinc-800 last:border-0 hover:bg-zinc-800 transition">
                       <button
-                        onClick={() => {
-                          loadWorkflow(wf.id);
+                        onClick={async () => {
+                          await loadWorkflow(wf.id);
                           setShowLoadMenu(false);
+                          setLoadSuccess(true);
+                          setTimeout(() => setLoadSuccess(false), 2000);
                         }}
                         className="flex-grow text-left px-3 py-2 text-xs text-zinc-300 group-hover:text-white transition truncate"
                       >
