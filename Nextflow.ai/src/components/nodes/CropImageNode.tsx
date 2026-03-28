@@ -30,13 +30,13 @@ export default function CropImageNode({ id, data, selected }: { id: string; data
             className="!w-3 !h-3 !bg-zinc-600 !border-2 !border-zinc-900 !relative !transform-none" />
           <span className="ml-2 text-[9px] text-zinc-500 leading-none">Image</span>
         </div>
-        {(["x","y","width","height"] as const).map((h) => (
+        {/* {(["x","y","width","height"] as const).map((h) => (
           <div key={h} className="relative flex items-center">
             <Handle type="target" position={Position.Left} id={h}
               className="!w-3 !h-3 !bg-zinc-700 !border-2 !border-zinc-900 !relative !transform-none" />
             <span className="ml-2 text-[9px] text-zinc-500 leading-none capitalize">{h}</span>
           </div>
-        ))}
+        ))} */}
       </div>
 
       <label className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">Crop Region (%)</label>
