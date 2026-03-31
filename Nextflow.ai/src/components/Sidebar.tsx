@@ -7,8 +7,8 @@ import { Search, Type, Image, Video, Crop, Film, Cpu, ChevronLeft, ChevronRight 
 const NODE_TYPES = [
   { type: "text",         label: "Text Node",          icon: Type,   description: "Add text input or prompts" },
   { type: "uploadImage",  label: "Upload Image",        icon: Image,  description: "Upload via Transloadit" },
-  { type: "uploadVideo",  label: "Upload Video",        icon: Video,  description: "Upload via Transloadit" },
   { type: "cropImage",    label: "Crop Image",          icon: Crop,   description: "FFmpeg crop via Trigger.dev" },
+  { type: "uploadVideo",  label: "Upload Video",        icon: Video,  description: "Upload via Transloadit" },
   { type: "extractFrame", label: "Extract Frame",       icon: Film,   description: "FFmpeg frame extraction" },
   { type: "runLlm",       label: "Run Any LLM",         icon: Cpu,    description: "Gemini multimodal AI" },
 ];
