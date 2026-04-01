@@ -51,6 +51,15 @@ const NODE_LABEL_MAP: Record<string, string> = {
   cropImage: "Crop Image", extractFrame: "Extract Frame", runLlm: "Run LLM",
 };
 
+const nodeTypes = {
+  text: TextNode,
+  uploadImage: UploadImageNode,
+  uploadVideo: UploadVideoNode,
+  cropImage: CropImageNode,
+  extractFrame: ExtractFrameNode,
+  runLlm: LLMNode,
+};
+
 const SAMPLE_WORKFLOW = {
   nodes: [
     { id: "text-1", type: "text", position: { x: 50, y: 50 }, data: { label: "Text Node #1 (System)", status: "idle", text: "You are a professional marketing copywriter. Generate a compelling one-paragraph product description." } },
@@ -158,11 +167,6 @@ function CanvasInner() {
     }
   };
 
-  const nodeTypes = useMemo(() => ({
-    text: TextNode, uploadImage: UploadImageNode, uploadVideo: UploadVideoNode,
-    cropImage: CropImageNode, extractFrame: ExtractFrameNode, runLlm: LLMNode,
-  }), []);
-
   const isValidConnection = useCallback((connection: Connection) => {
     if (connection.source === connection.target) return false;
 
@@ -197,6 +201,18 @@ function CanvasInner() {
       return false;
     }
     if (sourceNodeObj?.type === "uploadVideo" && (targetH === "system_prompt" || targetH === "user_message" || targetH === "image")) {
+      return false;
+    }
+    if (sourceNodeObj?.type === "extractFrame" && (targetH === "system_prompt" || targetH === "user_message")) {
+      return false;
+    }
+    if (sourceNodeObj?.type === "cropImage" && (targetH === "system_prompt" || targetH === "user_message")) {
+      return false;
+    }
+    if (sourceNodeObj?.type === "runLlm" && (targetH === "image" || targetH === "images" || targetH === "video")) {
+      return false;
+    }
+    if (sourceNodeObj?.type === "text" && (targetH === "image" || targetH === "images" || targetH === "video")) {
       return false;
     }
 
@@ -298,11 +314,10 @@ function CanvasInner() {
           <button
             onClick={onSave}
             disabled={saveStatus !== 'idle'}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition border ${
-              saveStatus === 'saved' 
-                ? 'bg-green-500/20 border-green-500/50 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]' 
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition border ${saveStatus === 'saved'
+                ? 'bg-green-500/20 border-green-500/50 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
                 : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
-            }`}
+              }`}
           >
             {saveStatus === 'saving' ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
@@ -323,11 +338,10 @@ function CanvasInner() {
                 setShowLoadMenu(!showLoadMenu);
               }}
               disabled={isFetchingWorkflows}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition border ${
-                loadSuccess 
-                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' 
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition border ${loadSuccess
+                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
                   : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
-              }`}
+                }`}
             >
               {isFetchingWorkflows ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
