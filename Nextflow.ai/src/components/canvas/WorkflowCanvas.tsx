@@ -254,7 +254,11 @@ function CanvasInner() {
     const input = Object.assign(document.createElement("input"), { type: "file", accept: ".json" });
     input.onchange = (e: Event) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+
+      if (!file || !file.name.endsWith(".json")) {
+        alert("Please select a valid JSON file");
+        return
+      };
       const reader = new FileReader();
       reader.onload = (re) => { if (typeof re.target?.result === "string") importWorkflow(re.target.result); };
       reader.readAsText(file);
