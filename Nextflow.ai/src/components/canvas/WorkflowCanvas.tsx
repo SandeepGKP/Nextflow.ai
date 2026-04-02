@@ -197,19 +197,19 @@ function CanvasInner() {
     const sourceNodeObj = nodes.find(n => n.id === connection.source);
     const targetNodeObj = nodes.find(n => n.id === connection.target);
 
-    if (sourceNodeObj?.type === "uploadImage" && (targetH === "system_prompt" || targetH === "user_message")) {
+    if (sourceNodeObj?.type === "uploadImage" && (targetH === "system_prompt" || targetH === "user_message" || targetH === "video" || targetH === "timestamp")) {
       return false;
     }
-    if (sourceNodeObj?.type === "uploadVideo" && (targetH === "system_prompt" || targetH === "user_message" || targetH === "image")) {
+    if (sourceNodeObj?.type === "uploadVideo" && (targetH === "system_prompt" || targetH === "user_message" || targetH === "image" || targetH === "images" || targetH === "timestamp")) {
       return false;
     }
-    if (sourceNodeObj?.type === "extractFrame" && (targetH === "system_prompt" || targetH === "user_message")) {
+    if (sourceNodeObj?.type === "extractFrame" && (targetH === "system_prompt" || targetH === "user_message" || targetH === "video" || targetH === "timestamp")) {
       return false;
     }
-    if (sourceNodeObj?.type === "cropImage" && (targetH === "system_prompt" || targetH === "user_message")) {
+    if (sourceNodeObj?.type === "cropImage" && (targetH === "system_prompt" || targetH === "user_message" || targetH === "video" || targetH === "timestamp")) {
       return false;
     }
-    if (sourceNodeObj?.type === "runLlm" && (targetH === "image" || targetH === "images" || targetH === "video")) {
+    if (sourceNodeObj?.type === "runLlm" && (targetH === "image" || targetH === "images" || targetH === "video" || targetH === "timestamp")) {
       return false;
     }
     if (sourceNodeObj?.type === "text" && (targetH === "image" || targetH === "images" || targetH === "video")) {
