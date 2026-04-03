@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NextFlow",
+  title: "NextFlow.ai",
   description: "Pixel-perfect Krea.ai clone for LLM workflows",
 };
 
