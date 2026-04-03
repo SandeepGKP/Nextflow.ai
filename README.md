@@ -1,9 +1,8 @@
 <div align="center">
   <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop" width="100%" height="50%" alt="Header Image" style="border-radius: 12px; margin-bottom: 20px;" />
   
-  <h1>🌌 NextFlow AI Orchestrator</h1>
-  <a href="https://nextflow-ai-iota.vercel.app/" style="margin-bottom : 20px">https://nextflow.ai.com</a>
-  
+  <h1>🌌 NextFlow AI Orchestrator --> <a href="https://nextflow-ai-iota.vercel.app/" style="margin-bottom : 20px">https://nextflow.ai.com</a>
+  </h1>
   <p align="center">
     <img src="https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=next.js&logoColor=white" />
     <img src="https://img.shields.io/badge/Tailwind_4-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white" />
