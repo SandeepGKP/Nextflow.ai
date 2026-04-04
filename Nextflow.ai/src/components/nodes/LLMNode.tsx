@@ -11,7 +11,7 @@ enum Position {
 }
 import BaseNode from "./BaseNode";
 import { useWorkflowStore, BaseNodeData } from "@/store/workflowStore";
-import { Maximize2, Minimize2, Copy, Check } from "lucide-react";
+import { Maximize2, Minimize2, Copy, Check,ExternalLink } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -82,7 +82,7 @@ export default function LLMNode({ id, data, selected }: { id: string; data: Base
             className="w-full bg-zinc-950 border border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg p-2 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500 resize-none placeholder:text-zinc-600"
             rows={2}
             placeholder={isSystemConnected ? "Connected to input..." : "Instructions for AI..."}
-            value={data.systemPrompt || ""}
+            value={data.systemPrompt || "You are helpful assistant."}
             disabled={isSystemConnected}
             onChange={(e) => updateNodeData(id, { systemPrompt: e.target.value })}
           />
@@ -137,6 +137,12 @@ export default function LLMNode({ id, data, selected }: { id: string; data: Base
                   ul: ({node, ...props}) => <ul className="list-disc pl-5 my-1.5" {...props} />,
                   ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-1.5" {...props} />,
                   li: ({node, ...props}) => <li className="my-0.5" {...props} />,
+                  a: ({node, ...props}) => (
+                    <a className="text-blue-400 underline inline-flex items-center gap-1" {...props} target="_blank" rel="noopener noreferrer">
+                      {props.children}
+                      <ExternalLink className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  ),
                   blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-emerald-500/50 pl-3 my-2 text-zinc-400 italic" {...props} />,
                   table: ({node, ...props}) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-zinc-700/50 border border-zinc-700/50 rounded-lg text-sm shadow-sm" {...props} /></div>,
                   thead: ({node, ...props}) => <thead className="bg-zinc-800/50" {...props} />,
@@ -204,6 +210,12 @@ export default function LLMNode({ id, data, selected }: { id: string; data: Base
                           ul: ({node, ...props}) => <ul className="list-disc pl-8 mb-4 space-y-2" {...props} />,
                           ol: ({node, ...props}) => <ol className="list-decimal pl-8 mb-4 space-y-2" {...props} />,
                           li: ({node, ...props}) => <li className="pl-1" {...props} />,
+                          a: ({node, ...props}) => (
+                            <a className="text-blue-400 hover:underline inline-flex items-center gap-1" {...props} target="_blank" rel="noopener noreferrer">
+                              {props.children}
+                              <ExternalLink className="w-2.5 h-2.5 opacity-60 hover:opacity-100 transition-opacity" />
+                            </a>
+                          ),
                           blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-emerald-500/50 pl-4 py-1 my-4 bg-zinc-800/30 text-zinc-300 italic rounded-r-lg" {...props} />,
                           table: ({node, ...props}) => <div className="overflow-x-auto my-6"><table className="min-w-full divide-y divide-zinc-800 border border-zinc-800 rounded-xl text-base shadow-xl" {...props} /></div>,
                           thead: ({node, ...props}) => <thead className="bg-zinc-900/50" {...props} />,

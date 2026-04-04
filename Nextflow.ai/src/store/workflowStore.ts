@@ -222,7 +222,7 @@ async function executeNodeFn(node: AppNode, inputs: Record<string, any>): Promis
 
     case "runLlm": {
       const userMessage = inputs.user_message || node.data.userMessage || "";
-      const systemPrompt = inputs.system_prompt || node.data.systemPrompt;
+      const systemPrompt = inputs.system_prompt || node.data.systemPrompt || "You are a helpful AI assistant. Respond concisely and accurately.";
       let rawImages = inputs.images || [];
       if (!Array.isArray(rawImages)) rawImages = [rawImages];
       
@@ -433,7 +433,7 @@ export const useWorkflowStore = create<WorkflowState>()(
     updateNodeData(nodeId, { status: "running" });
 
     try {
-      const result = await executeNodeFn(node, inputs);
+      const result = await executeNodeFn(node, { ...inputs, workflowRunId: `single-${Date.now()}` });
       if (result?.error) throw new Error(result.error);
       
       // Update local node state with the entire result object
