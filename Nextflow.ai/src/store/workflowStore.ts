@@ -38,7 +38,7 @@ export type EdgeChange = any;
 
 export type OnNodesChange = (changes: any[]) => void;
 export type OnEdgesChange = (changes: any[]) => void;
-export type OnConnect   = (connection: Connection) => void;
+export type OnConnect = (connection: Connection) => void;
 
 // Runtime helpers from reactflow (exist at JS level even when .d.ts is broken)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -49,10 +49,10 @@ const rf = require("reactflow") as {
   MarkerType: { ArrowClosed: string };
 };
 
-const addEdge          = rf.addEdge;
+const addEdge = rf.addEdge;
 const applyNodeChanges = rf.applyNodeChanges;
 const applyEdgeChanges = rf.applyEdgeChanges;
-const MarkerType       = rf.MarkerType;
+const MarkerType = rf.MarkerType;
 
 export type NodeStatus = "idle" | "running" | "success" | "error";
 
@@ -153,7 +153,7 @@ function gatherInputs(nodeId: string, edges: Edge[], results: Record<string, any
     const sourceNode = nodes.find(n => n.id === edge.source);
     // Fallback to source node's stored data if not in current results (e.g. single node run)
     const sourceResult = results[edge.source] ?? sourceNode?.data.output ?? sourceNode?.data.imageUrl ?? sourceNode?.data.videoUrl ?? sourceNode?.data.croppedUrl ?? sourceNode?.data.frameUrl;
-    
+
     if (sourceResult !== undefined && sourceResult !== null) {
       const targetHandle = edge.targetHandle || "input";
       // Accumulate into array for multi-input handles
@@ -225,7 +225,7 @@ async function executeNodeFn(node: AppNode, inputs: Record<string, any>): Promis
       const systemPrompt = inputs.system_prompt || node.data.systemPrompt || "You are a helpful AI assistant. Respond concisely and accurately.";
       let rawImages = inputs.images || [];
       if (!Array.isArray(rawImages)) rawImages = [rawImages];
-      
+
       // Sanitization: Ensure only strings (URLs/Base64) reach the API
       const images: string[] = rawImages.filter((img: any) => typeof img === "string" && img.length > 0);
 
@@ -235,13 +235,13 @@ async function executeNodeFn(node: AppNode, inputs: Record<string, any>): Promis
       while (attempts < maxAttempts) {
         const res = await fetch("/api/execute/llm", {
           method: "POST",
-          body: JSON.stringify({ 
-            model: node.data.model || "gemini-1.5-flash", 
-            systemPrompt, 
-            userMessage: userMessage || (images.length > 0 ? "Please analyze the provided input." : "Hello!"), 
-            imageBase64s: images, 
-            nodeId: node.id, 
-            workflowRunId: inputs.workflowRunId 
+          body: JSON.stringify({
+            model: node.data.model || "gemini-1.5-flash",
+            systemPrompt,
+            userMessage: userMessage || (images.length > 0 ? "Please analyze the provided input." : "Hello!"),
+            imageBase64s: images,
+            nodeId: node.id,
+            workflowRunId: inputs.workflowRunId
           }),
           headers: { "Content-Type": "application/json" },
         });
@@ -281,291 +281,291 @@ export const useWorkflowStore = create<WorkflowState>()(
       currentWorkflowName: "My Workflow",
       isDirty: false,
 
-  setDirty: (dirty: boolean) => set({ isDirty: dirty }),
-  setCurrentWorkflow: (id: string | null, name: string) => set({ currentWorkflowId: id, currentWorkflowName: name }),
-  
-  onNodesChange: (changes: NodeChange[]) => {
-    set({ nodes: applyNodeChanges(changes, get().nodes), isDirty: true });
-  },
-  onEdgesChange: (changes: EdgeChange[]) => {
-    set({ edges: applyEdgeChanges(changes, get().edges), isDirty: true });
-  },
-  onConnect: (connection: Connection) => {
-    set({
-      edges: addEdge(
-        { ...connection, animated: true, markerEnd: { type: MarkerType.ArrowClosed, color: "#6366f1" }, style: { stroke: "#6366f1" } },
-        get().edges
-      ),
-      isDirty: true
-    });
-  },
-  setNodes: (nodes) => set({ nodes, isDirty: true }),
-  setEdges: (edges) => set({ edges, isDirty: true }),
-  addNode: (node) => set({ nodes: [...get().nodes, node], isDirty: true }),
-  updateNodeData: (id, data) => {
-    set({
-      nodes: get().nodes.map((node) =>
-        node.id === id ? { ...node, data: { ...node.data, ...data } } : node
-      ),
-      isDirty: true
-    });
-  },
-  addHistoryRun: (run) => set({ history: [run, ...get().history] }),
+      setDirty: (dirty: boolean) => set({ isDirty: dirty }),
+      setCurrentWorkflow: (id: string | null, name: string) => set({ currentWorkflowId: id, currentWorkflowName: name }),
 
-  executeWorkflow: async (selectedNodeIds?: string[]) => {
-    const { nodes: allNodes, edges, updateNodeData, addHistoryRun } = get();
-    if (get().isExecuting) return;
-    
-    // Determine scope
-    let nodes = allNodes;
-    let scope: "full" | "selected" = "full";
-    if (selectedNodeIds && selectedNodeIds.length > 0) {
-      nodes = allNodes.filter(n => selectedNodeIds.includes(n.id));
-      scope = "selected";
-    }
-
-    set({ isExecuting: true });
-
-    let dbRunId: string | null = null;
-    try {
-      const res = await fetch("/api/run", {
-        method: "POST",
-        body: JSON.stringify({ scope }),
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      dbRunId = data.runId;
-    } catch (e) {
-      console.warn("Failed to create DB run, continuing in-memory", e);
-    }
-
-    const runId = dbRunId || `run-${Date.now()}`;
-    const startedAt = Date.now();
-    const nodeRuns: NodeRunEntry[] = [];
-    const results: Record<string, any> = {};
-    let runStatus: NodeStatus = "success";
-
-    const inDegrees = new Map(nodes.map((n) => [n.id, edges.filter((e) => e.target === n.id && nodes.some(x => x.id === e.source)).length]));
-    const outEdgesMap = new Map(nodes.map((n) => [n.id, edges.filter((e) => e.source === n.id)]));
-    
-    nodes.forEach((n) => updateNodeData(n.id, { status: "idle" }));
-
-    async function processNode(nodeId: string): Promise<void> {
-      const { nodes, edges } = get();
-      const node = nodes.find(n => n.id === nodeId);
-      if (!node) return;
-
-      const inputs = gatherInputs(nodeId, edges, results, nodes);
-      const nodeStartedAt = Date.now();
-      updateNodeData(nodeId, { status: "running" });
-
-      let isSuccess = false;
-      try {
-        const result = await executeNodeFn(node, { ...inputs, workflowRunId: dbRunId });
-        if (result?.error) {
-          throw new Error(result.error);
-        }
-        
-        // results dictionary expects the primary output (for runLlm it's output, for others it's the URL)
-        results[nodeId] = result?.output || result?.croppedUrl || result?.frameUrl || result?.imageUrl || result?.videoUrl || result;
-        
-        // Update local node state with the entire result object for visual preview
-        updateNodeData(nodeId, { status: "success", ...result });
-        
-        nodeRuns.push({ 
-          nodeId, 
-          nodeType: node.type || "unknown", 
-          status: "success", 
-          startedAt: nodeStartedAt, 
-          finishedAt: Date.now(), 
-          inputs, 
-          outputs: result 
+      onNodesChange: (changes: NodeChange[]) => {
+        set({ nodes: applyNodeChanges(changes, get().nodes), isDirty: true });
+      },
+      onEdgesChange: (changes: EdgeChange[]) => {
+        set({ edges: applyEdgeChanges(changes, get().edges), isDirty: true });
+      },
+      onConnect: (connection: Connection) => {
+        set({
+          edges: addEdge(
+            { ...connection, animated: true, markerEnd: { type: MarkerType.ArrowClosed, color: "#6366f1" }, style: { stroke: "#6366f1" } },
+            get().edges
+          ),
+          isDirty: true
         });
-        isSuccess = true;
-      } catch (err) {
-        runStatus = "error";
-        updateNodeData(nodeId, { status: "error", error: err instanceof Error ? err.message : String(err) });
-        nodeRuns.push({ nodeId, nodeType: node.type || "unknown", status: "error", startedAt: nodeStartedAt, finishedAt: Date.now(), inputs });
-      }
+      },
+      setNodes: (nodes) => set({ nodes, isDirty: true }),
+      setEdges: (edges) => set({ edges, isDirty: true }),
+      addNode: (node) => set({ nodes: [...get().nodes, node], isDirty: true }),
+      updateNodeData: (id, data) => {
+        set({
+          nodes: get().nodes.map((node) =>
+            node.id === id ? { ...node, data: { ...node.data, ...data } } : node
+          ),
+          isDirty: true
+        });
+      },
+      addHistoryRun: (run) => set({ history: [run, ...get().history] }),
 
-      if (!isSuccess) return; // Halt downstream execution
+      executeWorkflow: async (selectedNodeIds?: string[]) => {
+        const { nodes: allNodes, edges, updateNodeData, addHistoryRun } = get();
+        if (get().isExecuting) return;
 
-      // Trigger dependents
-      const dependents = outEdgesMap.get(nodeId) || [];
-      const nextToRun: Promise<void>[] = [];
-      for (const edge of dependents) {
-        const targetId = edge.target;
-        if (!inDegrees.has(targetId)) continue; // Not part of the selection
-
-        const remaining = (inDegrees.get(targetId) || 1) - 1;
-        inDegrees.set(targetId, remaining);
-        if (remaining === 0) {
-          nextToRun.push(processNode(targetId));
+        // Determine scope
+        let nodes = allNodes;
+        let scope: "full" | "selected" = "full";
+        if (selectedNodeIds && selectedNodeIds.length > 0) {
+          nodes = allNodes.filter(n => selectedNodeIds.includes(n.id));
+          scope = "selected";
         }
-      }
-      if (nextToRun.length > 0) await Promise.all(nextToRun);
-    }
 
-    // Start with entry nodes
-    const entryNodes = nodes.filter((n) => inDegrees.get(n.id) === 0);
-    await Promise.all(entryNodes.map((n) => processNode(n.id)));
+        set({ isExecuting: true });
 
-    if (dbRunId) {
-      await fetch("/api/run", {
-        method: "PATCH",
-        body: JSON.stringify({ runId: dbRunId, status: runStatus, duration: Date.now() - startedAt }),
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+        let dbRunId: string | null = null;
+        try {
+          const res = await fetch("/api/run", {
+            method: "POST",
+            body: JSON.stringify({ scope }),
+            headers: { "Content-Type": "application/json" },
+          });
+          const data = await res.json();
+          dbRunId = data.runId;
+        } catch (e) {
+          console.warn("Failed to create DB run, continuing in-memory", e);
+        }
 
-    addHistoryRun({ id: runId, startedAt, finishedAt: Date.now(), status: runStatus, scope, nodeRuns });
-    set({ isExecuting: false });
-  },
+        const runId = dbRunId || `run-${Date.now()}`;
+        const startedAt = Date.now();
+        const nodeRuns: NodeRunEntry[] = [];
+        const results: Record<string, any> = {};
+        let runStatus: NodeStatus = "success";
 
-  executeNode: async (nodeId: string) => {
-    const { nodes, edges, updateNodeData, addHistoryRun } = get();
-    const node = nodes.find((n) => n.id === nodeId);
-    if (!node) return;
+        const inDegrees = new Map(nodes.map((n) => [n.id, edges.filter((e) => e.target === n.id && nodes.some(x => x.id === e.source)).length]));
+        const outEdgesMap = new Map(nodes.map((n) => [n.id, edges.filter((e) => e.source === n.id)]));
 
-    const results: Record<string, any> = {};
-    const inputs = gatherInputs(nodeId, edges, results, nodes);
-    const startedAt = Date.now();
-    updateNodeData(nodeId, { status: "running" });
+        nodes.forEach((n) => updateNodeData(n.id, { status: "idle" }));
 
-    try {
-      const result = await executeNodeFn(node, { ...inputs, workflowRunId: `single-${Date.now()}` });
-      if (result?.error) throw new Error(result.error);
-      
-      // Update local node state with the entire result object
-      updateNodeData(nodeId, { status: "success", ...result });
+        async function processNode(nodeId: string): Promise<void> {
+          const { nodes, edges } = get();
+          const node = nodes.find(n => n.id === nodeId);
+          if (!node) return;
 
-      addHistoryRun({
-        id: `run-${Date.now()}`,
-        startedAt,
-        finishedAt: Date.now(),
-        status: "success",
-        scope: "single",
-        nodeRuns: [{ 
-          nodeId, 
-          nodeType: node.type || "unknown", 
-          status: "success", 
-          startedAt, 
-          finishedAt: Date.now(), 
-          inputs, 
-          outputs: result 
-        }],
-      });
-    } catch (err) {
-      updateNodeData(nodeId, { status: "error", error: err instanceof Error ? err.message : String(err) });
-    }
-  },
+          const inputs = gatherInputs(nodeId, edges, results, nodes);
+          const nodeStartedAt = Date.now();
+          updateNodeData(nodeId, { status: "running" });
 
-  saveWorkflow: async (name: string) => {
-    const { nodes, edges, currentWorkflowId } = get();
-    set({ isSaving: true });
-    try {
-      const res = await fetch("/api/workflows", {
-        method: "POST",
-        body: JSON.stringify({ name, nodes, edges, workflowId: currentWorkflowId }),
-        headers: { "Content-Type": "application/json" },
-      });
-      if (res.ok) {
+          let isSuccess = false;
+          try {
+            const result = await executeNodeFn(node, { ...inputs, workflowRunId: dbRunId });
+            if (result?.error) {
+              throw new Error(result.error);
+            }
+
+            // results dictionary expects the primary output (for runLlm it's output, for others it's the URL)
+            results[nodeId] = result?.output || result?.croppedUrl || result?.frameUrl || result?.imageUrl || result?.videoUrl || result;
+
+            // Update local node state with the entire result object for visual preview
+            updateNodeData(nodeId, { status: "success", ...result });
+
+            nodeRuns.push({
+              nodeId,
+              nodeType: node.type || "unknown",
+              status: "success",
+              startedAt: nodeStartedAt,
+              finishedAt: Date.now(),
+              inputs,
+              outputs: result
+            });
+            isSuccess = true;
+          } catch (err) {
+            runStatus = "error";
+            updateNodeData(nodeId, { status: "error", error: err instanceof Error ? err.message : String(err) });
+            nodeRuns.push({ nodeId, nodeType: node.type || "unknown", status: "error", startedAt: nodeStartedAt, finishedAt: Date.now(), inputs });
+          }
+
+          if (!isSuccess) return; // Halt downstream execution
+
+          // Trigger dependents
+          const dependents = outEdgesMap.get(nodeId) || [];
+          const nextToRun: Promise<void>[] = [];
+          for (const edge of dependents) {
+            const targetId = edge.target;
+            if (!inDegrees.has(targetId)) continue; // Not part of the selection
+
+            const remaining = (inDegrees.get(targetId) || 1) - 1;
+            inDegrees.set(targetId, remaining);
+            if (remaining === 0) {
+              nextToRun.push(processNode(targetId));
+            }
+          }
+          if (nextToRun.length > 0) await Promise.all(nextToRun);
+        }
+
+        // Start with entry nodes
+        const entryNodes = nodes.filter((n) => inDegrees.get(n.id) === 0);
+        await Promise.all(entryNodes.map((n) => processNode(n.id)));
+
+        if (dbRunId) {
+          await fetch("/api/run", {
+            method: "PATCH",
+            body: JSON.stringify({ runId: dbRunId, status: runStatus, duration: Date.now() - startedAt }),
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        addHistoryRun({ id: runId, startedAt, finishedAt: Date.now(), status: runStatus, scope, nodeRuns });
+        set({ isExecuting: false });
+      },
+
+      executeNode: async (nodeId: string) => {
+        const { nodes, edges, updateNodeData, addHistoryRun } = get();
+        const node = nodes.find((n) => n.id === nodeId);
+        if (!node) return;
+
+        const results: Record<string, any> = {};
+        const inputs = gatherInputs(nodeId, edges, results, nodes);
+        const startedAt = Date.now();
+        updateNodeData(nodeId, { status: "running" });
+
+        try {
+          const result = await executeNodeFn(node, { ...inputs, workflowRunId: `single-${Date.now()}` });
+          if (result?.error) throw new Error(result.error);
+
+          // Update local node state with the entire result object
+          updateNodeData(nodeId, { status: "success", ...result });
+
+          addHistoryRun({
+            id: `run-${Date.now()}`,
+            startedAt,
+            finishedAt: Date.now(),
+            status: "success",
+            scope: "single",
+            nodeRuns: [{
+              nodeId,
+              nodeType: node.type || "unknown",
+              status: "success",
+              startedAt,
+              finishedAt: Date.now(),
+              inputs,
+              outputs: result
+            }],
+          });
+        } catch (err) {
+          updateNodeData(nodeId, { status: "error", error: err instanceof Error ? err.message : String(err) });
+        }
+      },
+
+      saveWorkflow: async (name: string) => {
+        const { nodes, edges, currentWorkflowId } = get();
+        set({ isSaving: true });
+        try {
+          const res = await fetch("/api/workflows", {
+            method: "POST",
+            body: JSON.stringify({ name, nodes, edges, workflowId: currentWorkflowId }),
+            headers: { "Content-Type": "application/json" },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.workflow?.id) {
+              set({ currentWorkflowId: data.workflow.id, currentWorkflowName: data.workflow.name, isDirty: false });
+            }
+          }
+        } finally {
+          set({ isSaving: false });
+        }
+      },
+
+      loadWorkflow: async (workflowId: string) => {
+        const res = await fetch(`/api/workflows?id=${workflowId}`);
         const data = await res.json();
-        if (data.workflow?.id) {
-          set({ currentWorkflowId: data.workflow.id, currentWorkflowName: data.workflow.name, isDirty: false });
+        if (data.workflows?.[0]) {
+          const wf = data.workflows[0];
+          set({
+            nodes: wf.json.nodes,
+            edges: wf.json.edges,
+            currentWorkflowId: wf.id,
+            currentWorkflowName: wf.name,
+            isDirty: false
+          });
         }
-      }
-    } finally {
-      set({ isSaving: false });
-    }
-  },
+      },
 
-  loadWorkflow: async (workflowId: string) => {
-    const res = await fetch(`/api/workflows?id=${workflowId}`);
-    const data = await res.json();
-    if (data.workflows?.[0]) {
-      const wf = data.workflows[0];
-      set({ 
-        nodes: wf.json.nodes, 
-        edges: wf.json.edges,
-        currentWorkflowId: wf.id,
-        currentWorkflowName: wf.name,
-        isDirty: false
-      });
-    }
-  },
-
-  deleteWorkflow: async (workflowId: string) => {
-    const res = await fetch(`/api/workflows?id=${workflowId}`, { method: "DELETE" });
-    if (res.ok) {
-      if (get().currentWorkflowId === workflowId) {
-        set({ currentWorkflowId: null, currentWorkflowName: "My Workflow" });
-      }
-    }
-  },
+      deleteWorkflow: async (workflowId: string) => {
+        const res = await fetch(`/api/workflows?id=${workflowId}`, { method: "DELETE" });
+        if (res.ok) {
+          if (get().currentWorkflowId === workflowId) {
+            set({ currentWorkflowId: null, currentWorkflowName: "My Workflow" });
+          }
+        }
+      },
 
 
-  exportWorkflow: () => {
-    const { nodes, edges } = get();
-    return JSON.stringify({ nodes, edges }, null, 2);
-  },
+      exportWorkflow: () => {
+        const { nodes, edges } = get();
+        return JSON.stringify({ nodes, edges }, null, 2);
+      },
 
-  importWorkflow: (json: string) => {
-    try {
-      const { nodes, edges } = JSON.parse(json);
-      set({ nodes, edges, isDirty: true });
-    } catch {
-      console.error("Invalid workflow JSON");
-    }
-  },
-  fetchHistory: async () => {
-    try {
-      const res = await fetch("/api/history");
-      const data = await res.json();
-      if (data.runs) {
-        // Map DB runs to store WorkflowRun type
-        const mapped: WorkflowRun[] = data.runs.map((r: any) => ({
-          id: r.id,
-          startedAt: new Date(r.startedAt).getTime(),
-          finishedAt: r.finishedAt ? new Date(r.finishedAt).getTime() : undefined,
-          status: r.status as NodeStatus,
-          scope: r.scope as any,
-          nodeRuns: (r.nodeRuns || []).map((nr: any) => ({
-            nodeId: nr.nodeId,
-            nodeType: nr.nodeType,
-            status: nr.status as NodeStatus,
-            startedAt: new Date(nr.startedAt).getTime(),
-            finishedAt: nr.finishedAt ? new Date(nr.finishedAt).getTime() : undefined,
-            inputs: nr.inputs as any,
-            outputs: nr.outputs as any,
-          })),
-        }));
-        set({ history: mapped });
-      }
-    } catch (error) {
-      console.error("Failed to fetch history:", error);
-    }
-  },
-  deleteHistoryItem: async (id: string) => {
-    const { history } = get();
-    set({ history: history.filter(h => h.id !== id) });
-    try {
-      await fetch(`/api/history?id=${id}`, { method: "DELETE" });
-    } catch {
-      console.error("Failed to delete history item from server");
-    }
-  },
-  clearHistory: async () => {
-    set({ history: [] });
-    try {
-      await fetch("/api/history", { method: "DELETE" });
-    } catch {
-      console.error("Failed to clear history from server");
-    }
-  },
-}), {
-  partialize: (state) => ({
-    nodes: state.nodes,
-    edges: state.edges,
-  }),
-}));
+      importWorkflow: (json: string) => {
+        try {
+          const { nodes, edges } = JSON.parse(json);
+          set({ nodes, edges, isDirty: true });
+        } catch {
+          console.error("Invalid workflow JSON");
+        }
+      },
+      fetchHistory: async () => {
+        try {
+          const res = await fetch("/api/history");
+          const data = await res.json();
+          if (data.runs) {
+            // Map DB runs to store WorkflowRun type
+            const mapped: WorkflowRun[] = data.runs.map((r: any) => ({
+              id: r.id,
+              startedAt: new Date(r.startedAt).getTime(),
+              finishedAt: r.finishedAt ? new Date(r.finishedAt).getTime() : undefined,
+              status: r.status as NodeStatus,
+              scope: r.scope as any,
+              nodeRuns: (r.nodeRuns || []).map((nr: any) => ({
+                nodeId: nr.nodeId,
+                nodeType: nr.nodeType,
+                status: nr.status as NodeStatus,
+                startedAt: new Date(nr.startedAt).getTime(),
+                finishedAt: nr.finishedAt ? new Date(nr.finishedAt).getTime() : undefined,
+                inputs: nr.inputs as any,
+                outputs: nr.outputs as any,
+              })),
+            }));
+            set({ history: mapped });
+          }
+        } catch (error) {
+          console.error("Failed to fetch history:", error);
+        }
+      },
+      deleteHistoryItem: async (id: string) => {
+        const { history } = get();
+        set({ history: history.filter(h => h.id !== id) });
+        try {
+          await fetch(`/api/history?id=${id}`, { method: "DELETE" });
+        } catch {
+          console.error("Failed to delete history item from server");
+        }
+      },
+      clearHistory: async () => {
+        set({ history: [] });
+        try {
+          await fetch("/api/history", { method: "DELETE" });
+        } catch {
+          console.error("Failed to clear history from server");
+        }
+      },
+    }), {
+    partialize: (state) => ({
+      nodes: state.nodes,
+      edges: state.edges,
+    }),
+  }));
